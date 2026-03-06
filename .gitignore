@@ -1,0 +1,16 @@
+# Entorno virtual Python
+dieta_backend/venv/
+
+# Dependencias Node
+dietas_frontend/node_modules/
+dietas_frontend/build/
+
+# Secretos (nunca subir)
+.env
+.env.*
+dieta_backend/.env
+
+.DS_Store
+Thumbs.db
+*.pyc
+__pycache__/

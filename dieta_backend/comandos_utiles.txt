@@ -1,0 +1,2 @@
+Entrar al entorno virtual de Python: venv\Scripts\activate
+Ejecutar server: python app.py
