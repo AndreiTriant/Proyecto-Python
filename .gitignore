@@ -5,6 +5,10 @@ dieta_backend/venv/
 dietas_frontend/node_modules/
 dietas_frontend/build/
 
+# Base de datos SQLite (local)
+*.db
+dieta_backend/instance/
+
 # Secretos (nunca subir)
 .env
 .env.*

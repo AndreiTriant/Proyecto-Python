@@ -1,0 +1,11 @@
+{
+    "sqltools.useNodeRuntime": true,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "DietaMVP",
+            "database": "${workspaceFolder:DIETA_MVP}/dieta_backend/instance/app.db"
+        }
+    ]
+}
