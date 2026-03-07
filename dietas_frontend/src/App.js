@@ -14,7 +14,7 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Hola mundo 2</h1>
+      <h1>Hola mundo Soy Calamares</h1>
       {autor && <p>Autor: {autor}</p>}
     </div>
   );
