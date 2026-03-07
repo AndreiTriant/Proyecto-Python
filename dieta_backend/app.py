@@ -53,8 +53,6 @@ with app.app_context():
 
 # Constantes y utilidades
 EMAIL_REGEX = re.compile(r"^[^@]+@[^@]+\.[^@]+$")
-Autor = "Andrei"
-
 
 def validar_email(email):
     """Comprueba que el correo tenga @ y formato válido."""
@@ -73,12 +71,6 @@ def validar_email(email):
 def home():
     return "Backend DIETA_MVP funcionando."
 
-
-@app.route("/api/autor")
-def autor():
-    return jsonify({"Autor": Autor})
-
-
 @app.route("/api/usuarios")
 def listar_usuarios():
     """Lista usuarios (sin exponer password_hash)."""
@@ -88,15 +80,10 @@ def listar_usuarios():
 
 @app.route("/api/registro", methods=["POST"])
 def registro():
-    """
-    Registro de usuario. Body JSON: usuario, email, contraseña.
-    Validaciones: longitudes, email válido, email no duplicado.
-    Contraseña hasheada. Queries parametrizadas vía SQLAlchemy.
-    """
     data = request.get_json() or {}
     usuario = (data.get("usuario") or "").strip()
     email = (data.get("email") or "").strip().lower()
-    contraseña = data.get("contraseña") or ""
+    password = data.get("password") or ""
 
     if len(usuario) > USUARIO_MAX_LEN:
         return (
@@ -105,12 +92,12 @@ def registro():
         )
     if len(usuario) == 0:
         return jsonify({"ok": False, "error": "El usuario es obligatorio."}), 400
-    if len(contraseña) < PASSWORD_MIN_LEN:
+    if len(password) < PASSWORD_MIN_LEN:
         return (
             jsonify({"ok": False, "error": f"La contraseña debe tener al menos {PASSWORD_MIN_LEN} caracteres."}),
             400,
         )
-    if len(contraseña) > PASSWORD_MAX_LEN:
+    if len(password) > PASSWORD_MAX_LEN:
         return (
             jsonify({"ok": False, "error": f"La contraseña no puede superar {PASSWORD_MAX_LEN} caracteres."}),
             400,
@@ -124,7 +111,7 @@ def registro():
     if existente:
         return jsonify({"ok": False, "error": "Ya existe una cuenta con ese correo."}), 409
 
-    password_hash = generate_password_hash(contraseña, method="pbkdf2:sha256")
+    password_hash = generate_password_hash(password, method="pbkdf2:sha256")
     nuevo = models.Usuario(usuario=usuario, email=email, password_hash=password_hash)
     db.session.add(nuevo)
     db.session.commit()
@@ -134,16 +121,16 @@ def registro():
 @app.route("/api/login", methods=["POST"])
 def login():
     """
-    Login por email y contraseña. Body JSON: email, contraseña.
+    Login por email y contraseña. Body JSON: email, password.
     Comparación segura con check_password_hash. Queries parametrizadas.
     """
     data = request.get_json() or {}
     email = (data.get("email") or "").strip().lower()
-    contraseña = data.get("contraseña") or ""
+    password = data.get("password") or ""
 
     if not email:
         return jsonify({"ok": False, "error": "El correo es obligatorio."}), 400
-    if not contraseña:
+    if not password:
         return jsonify({"ok": False, "error": "La contraseña es obligatoria."}), 400
 
     user = db.session.execute(
@@ -151,7 +138,7 @@ def login():
     ).scalar_one_or_none()
     if not user:
         return jsonify({"ok": False, "error": "Correo o contraseña incorrectos."}), 401
-    if not check_password_hash(user.password_hash, contraseña):
+    if not check_password_hash(user.password_hash, password):
         return jsonify({"ok": False, "error": "Correo o contraseña incorrectos."}), 401
 
     return jsonify({"ok": True, "usuario": user.to_dict()})
