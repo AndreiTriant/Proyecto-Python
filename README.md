@@ -104,7 +104,7 @@ npm start
 
 ## Estructura del proyecto
 
-- **dieta_backend/** — API Flask, SQLite (SQLAlchemy), rutas `/`, `/api/autor`, `/api/usuarios`.
-- **dietas_frontend/** — React (Create React App), consume el backend en el puerto 8080.
+- **dieta_backend/** — API Flask, SQLite (SQLAlchemy). Rutas: `/`, `/api/autor`, `/api/usuarios`, **POST** `/api/registro`, **POST** `/api/login`. Contraseñas hasheadas (werkzeug), consultas parametrizadas (SQLAlchemy).
+- **dietas_frontend/** — React (Create React App), rutas `/`, `/registro`, `/login`. Sin estilos (pendiente para más adelante).
 
-La base de datos está en `dieta_backend/instance/app.db` (no se sube a Git).
+La base de datos está en `dieta_backend/instance/app.db` (no se sube a Git). Si tenías una versión anterior del esquema (tabla `usuarios` con `nombre`), borra `instance/app.db` y vuelve a arrancar el backend para crear las tablas de login (`usuario`, `email`, `password_hash`).

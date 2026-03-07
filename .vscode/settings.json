@@ -1,10 +1,11 @@
 {
+    "python.defaultInterpreterPath": "${workspaceFolder}/dieta_backend/venv/Scripts/python.exe",
     "sqltools.useNodeRuntime": true,
     "sqltools.connections": [
         {
             "previewLimit": 50,
             "driver": "SQLite",
-            "name": "DietaMVP",
+            "name": "Dieta_MVP",
             "database": "${workspaceFolder:DIETA_MVP}/dieta_backend/instance/app.db"
         }
     ]
