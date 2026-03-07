@@ -4,16 +4,16 @@ import { API_URL, validarEmail } from "./constantes";
 
 function Login() {
   const [email, setEmail] = useState("");
-  const [contraseña, setContraseña] = useState("");
+  const [password, setPassword] = useState("");
   const [mensajeEmail, setMensajeEmail] = useState("");
-  const [mensajeContraseña, setMensajeContraseña] = useState("");
+  const [mensajePassword, setMensajePassword] = useState("");
   const [mensajeGeneral, setMensajeGeneral] = useState("");
   const [enviado, setEnviado] = useState(false);
 
   function validarYEnviar(e) {
     e.preventDefault();
     setMensajeEmail("");
-    setMensajeContraseña("");
+    setMensajePassword("");
     setMensajeGeneral("");
 
     let hayError = false;
@@ -26,8 +26,8 @@ function Login() {
       setMensajeEmail("El correo no es válido (debe contener @ y dominio).");
       hayError = true;
     }
-    if (!contraseña) {
-      setMensajeContraseña("La contraseña es obligatoria.");
+    if (!password) {
+      setMensajePassword("La contraseña es obligatoria.");
       hayError = true;
     }
     if (hayError) return;
@@ -36,7 +36,7 @@ function Login() {
     fetch(`${API_URL}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: eMail, contraseña }),
+      body: JSON.stringify({ email: eMail, password }),
     })
       .then((res) => res.json().then((data) => ({ status: res.status, data })))
       .then(({ status, data }) => {
@@ -70,15 +70,15 @@ function Login() {
           {mensajeEmail && <p style={{ color: "red", marginTop: 4 }}>{mensajeEmail}</p>}
         </div>
         <div>
-          <label htmlFor="login-password">Contraseña</label>
+          <label htmlFor="login-password">contraseña</label>
           <input
             id="login-password"
             type="password"
-            value={contraseña}
-            onChange={(e) => setContraseña(e.target.value)}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             disabled={enviado}
           />
-          {mensajeContraseña && <p style={{ color: "red", marginTop: 4 }}>{mensajeContraseña}</p>}
+          {mensajePassword && <p style={{ color: "red", marginTop: 4 }}>{mensajePassword}</p>}
         </div>
         {mensajeGeneral && <p style={{ color: mensajeGeneral.includes("correcto") || mensajeGeneral.includes("Bienvenido") ? "green" : "red", marginTop: 8 }}>{mensajeGeneral}</p>}
         <button type="submit" disabled={enviado}>{enviado ? "Comprobando…" : "Entrar"}</button>
