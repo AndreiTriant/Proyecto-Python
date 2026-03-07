@@ -5,10 +5,10 @@ import { API_URL, USUARIO_MAX_LEN, PASSWORD_MIN_LEN, PASSWORD_MAX_LEN, validarEm
 function Registro() {
   const [usuario, setUsuario] = useState("");
   const [email, setEmail] = useState("");
-  const [contraseña, setContraseña] = useState("");
+  const [password, setPassword] = useState("");
   const [mensajeUsuario, setMensajeUsuario] = useState("");
   const [mensajeEmail, setMensajeEmail] = useState("");
-  const [mensajeContraseña, setMensajeContraseña] = useState("");
+  const [mensajePassword, setMensajePassword] = useState("");
   const [mensajeGeneral, setMensajeGeneral] = useState("");
   const [enviado, setEnviado] = useState(false);
 
@@ -16,30 +16,29 @@ function Registro() {
     e.preventDefault();
     setMensajeUsuario("");
     setMensajeEmail("");
-    setMensajeContraseña("");
+    setMensajePassword("");
     setMensajeGeneral("");
 
     let hayError = false;
-    const u = usuario.trim();
-    const eMail = email.trim().toLowerCase();
-    const pass = contraseña;
+    const userNormalizado = usuario.trim();
+    const emailNormalizado = email.trim().toLowerCase();
 
-    if (u.length === 0) {
+    if (userNormalizado.length === 0) {
       setMensajeUsuario("El usuario es obligatorio.");
       hayError = true;
-    } else if (u.length > USUARIO_MAX_LEN) {
+    } else if (userNormalizado.length > USUARIO_MAX_LEN) {
       setMensajeUsuario(`El usuario no puede superar ${USUARIO_MAX_LEN} caracteres.`);
       hayError = true;
     }
-    if (!validarEmail(email)) {
+    if (!validarEmail(emailNormalizado)) {
       setMensajeEmail("El correo no es válido (debe contener @ y dominio).");
       hayError = true;
     }
-    if (pass.length < PASSWORD_MIN_LEN) {
-      setMensajeContraseña(`La contraseña debe tener al menos ${PASSWORD_MIN_LEN} caracteres.`);
+    if (password.length < PASSWORD_MIN_LEN) {
+      setMensajePassword(`La Password debe tener al menos ${PASSWORD_MIN_LEN} caracteres.`);
       hayError = true;
-    } else if (pass.length > PASSWORD_MAX_LEN) {
-      setMensajeContraseña(`La contraseña no puede superar ${PASSWORD_MAX_LEN} caracteres.`);
+    } else if (password.length > PASSWORD_MAX_LEN) {
+      setMensajePassword(`La Password no puede superar ${PASSWORD_MAX_LEN} caracteres.`);
       hayError = true;
     }
     if (hayError) return;
@@ -48,7 +47,7 @@ function Registro() {
     fetch(`${API_URL}/api/registro`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usuario: u, email: eMail, contraseña: pass }),
+      body: JSON.stringify({ usuario: userNormalizado, email: emailNormalizado, password: password }),
     })
       .then((res) => res.json().then((data) => ({ status: res.status, data })))
       .then(({ status, data }) => {
@@ -57,7 +56,7 @@ function Registro() {
           setMensajeGeneral("Registro correcto. Ya puedes iniciar sesión.");
           setUsuario("");
           setEmail("");
-          setContraseña("");
+          setPassword("");
           return;
         }
         setMensajeGeneral(data.error || "Error en el registro.");
@@ -76,7 +75,7 @@ function Registro() {
       <h1>Registro</h1>
       <form onSubmit={validarYEnviar}>
         <div>
-          <label htmlFor="reg-usuario">Usuario (máx. {USUARIO_MAX_LEN})</label>
+          <label htmlFor="reg-usuario">Usuario: </label>
           <input
             id="reg-usuario"
             type="text"
@@ -88,7 +87,7 @@ function Registro() {
           {mensajeUsuario && <p style={{ color: "red", marginTop: 4 }}>{mensajeUsuario}</p>}
         </div>
         <div>
-          <label htmlFor="reg-email">Correo</label>
+          <label htmlFor="reg-email">Correo: </label>
           <input
             id="reg-email"
             type="email"
@@ -99,16 +98,16 @@ function Registro() {
           {mensajeEmail && <p style={{ color: "red", marginTop: 4 }}>{mensajeEmail}</p>}
         </div>
         <div>
-          <label htmlFor="reg-password">Contraseña ({PASSWORD_MIN_LEN}-{PASSWORD_MAX_LEN} caracteres)</label>
+          <label htmlFor="reg-password">Contraseña: </label>
           <input
             id="reg-password"
             type="password"
-            value={contraseña}
-            onChange={(e) => setContraseña(e.target.value)}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             maxLength={PASSWORD_MAX_LEN + 1}
             disabled={enviado}
           />
-          {mensajeContraseña && <p style={{ color: "red", marginTop: 4 }}>{mensajeContraseña}</p>}
+          {mensajePassword && <p style={{ color: "red", marginTop: 4 }}>{mensajePassword}</p>}
         </div>
         {mensajeGeneral && <p style={{ color: mensajeGeneral.includes("correcto") ? "green" : "red", marginTop: 8 }}>{mensajeGeneral}</p>}
         <button type="submit" disabled={enviado}>{enviado ? "Enviando…" : "Registrarse"}</button>
