@@ -7,14 +7,14 @@ function Login() {
   const [password, setPassword] = useState("");
   const [mensajeEmail, setMensajeEmail] = useState("");
   const [mensajePassword, setMensajePassword] = useState("");
-  const [mensajeGeneral, setMensajeGeneral] = useState("");
+  const [mensajeGeneral, setMensajeGeneral] = useState(null);
   const [enviado, setEnviado] = useState(false);
 
   function validarYEnviar(e) {
     e.preventDefault();
     setMensajeEmail("");
     setMensajePassword("");
-    setMensajeGeneral("");
+    setMensajeGeneral(null);
 
     let hayError = false;
     const eMail = email.trim().toLowerCase();
@@ -42,15 +42,20 @@ function Login() {
       .then(({ status, data }) => {
         setEnviado(false);
         if (data.ok) {
-          setMensajeGeneral("Login correcto. Bienvenido, " + (data.usuario?.usuario || "") + ".");
+          setMensajeGeneral({
+            error: false,
+            response: "Login correcto. Bienvenido, " + (data.usuario?.usuario || "") + ".",
+          });
           return;
         }
-        setMensajeGeneral(data.error || "Error al iniciar sesión.");
-        if (status === 401) setMensajeGeneral(data.error || "Correo o contraseña incorrectos.");
+        setMensajeGeneral({
+          error: true,
+          response: data.error || "Error al iniciar sesión.",
+        });
       })
       .catch(() => {
         setEnviado(false);
-        setMensajeGeneral("Error de conexión con el servidor.");
+        setMensajeGeneral({ error: true, response: "Error de conexión con el servidor." });
       });
   }
 
@@ -80,7 +85,7 @@ function Login() {
           />
           {mensajePassword && <p style={{ color: "red", marginTop: 4 }}>{mensajePassword}</p>}
         </div>
-        {mensajeGeneral && <p style={{ color: mensajeGeneral.includes("correcto") || mensajeGeneral.includes("Bienvenido") ? "green" : "red", marginTop: 8 }}>{mensajeGeneral}</p>}
+        {mensajeGeneral && <p style={{ color: mensajeGeneral.error ? "red" : "green", marginTop: 8 }}>{mensajeGeneral.response}</p>}
         <button type="submit" disabled={enviado}>{enviado ? "Comprobando…" : "Entrar"}</button>
       </form>
       <p><Link to="/registro">No tengo cuenta (Registro)</Link></p>

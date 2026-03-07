@@ -30,7 +30,10 @@ function Registro() {
       setMensajeUsuario(`El usuario no puede superar ${USUARIO_MAX_LEN} caracteres.`);
       hayError = true;
     }
-    if (!validarEmail(emailNormalizado)) {
+    if (emailNormalizado.length === 0) {
+      setMensajeEmail("El correo es obligatorio.");
+      hayError = true;
+    } else if (!validarEmail(emailNormalizado)) {
       setMensajeEmail("El correo no es válido (debe contener @ y dominio).");
       hayError = true;
     }
@@ -95,7 +98,7 @@ function Registro() {
             onChange={(e) => setEmail(e.target.value)}
             disabled={enviado}
           />
-          {mensajeEmail && <p style={{ color: "red", marginTop: 4 }}>{mensajeEmail}</p>}
+          {(mensajeEmail && !mensajeGeneral) && <p style={{ color: "red", marginTop: 4 }}>{mensajeEmail}</p>}
         </div>
         <div>
           <label htmlFor="reg-password">Contraseña: </label>
@@ -107,10 +110,10 @@ function Registro() {
             maxLength={PASSWORD_MAX_LEN + 1}
             disabled={enviado}
           />
-          {mensajePassword && <p style={{ color: "red", marginTop: 4 }}>{mensajePassword}</p>}
+          {(mensajePassword && !mensajeGeneral) && <p style={{ color: "red", marginTop: 4 }}>{mensajePassword}</p>}
         </div>
         {mensajeGeneral && <p style={{ color: mensajeGeneral.includes("correcto") ? "green" : "red", marginTop: 8 }}>{mensajeGeneral}</p>}
-        <button type="submit" disabled={enviado}>{enviado ? "Enviando…" : "Registrarse"}</button>
+        <button type="submit" disabled={enviado}>{enviado ? "Enviando…" : "Crear cuenta"}</button>
       </form>
       <p><Link to="/login">Ya tengo cuenta (Login)</Link></p>
     </div>
