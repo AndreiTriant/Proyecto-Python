@@ -2,7 +2,7 @@
 Modelos de base de datos. Usan db de extensions (sin importar app).
 """
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 
 from config import (
     EMAIL_MAX_LEN,
@@ -23,7 +23,11 @@ class Usuario(db.Model):
     email = db.Column(db.String(EMAIL_MAX_LEN), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relaciones
+    meals = db.relationship("Meal", back_populates="user", lazy="select")
+    diet_plans = db.relationship("DietPlan", back_populates="user", lazy="select")
 
     def to_dict(self):
         return {"id": self.id, "usuario": self.usuario, "email": self.email}
@@ -49,6 +53,8 @@ class FoodItem(db.Model):
     carbs = db.Column(db.Float)
     sugar = db.Column(db.Float)
     fiber = db.Column(db.Float)
+
+    meal_foods = db.relationship("MealFood", back_populates="food_item", lazy="select")
 
     def to_dict(self):
         return {
@@ -85,6 +91,13 @@ class Meal(db.Model):
         db.Index("idx_meal_user_date", "user_id", "date"),
     )
 
+    # Relaciones
+    user = db.relationship("Usuario", back_populates="meals", lazy="select")
+    meal_foods = db.relationship("MealFood", back_populates="meal", lazy="select")
+    diet_plan_meals = db.relationship(
+        "DietPlanMeal", back_populates="meal", lazy="select"
+    )
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -108,7 +121,11 @@ class MealFood(db.Model):
 
     meals_number = db.Column(db.Integer, nullable=False)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relaciones
+    meal = db.relationship("Meal", back_populates="meal_foods", lazy="select")
+    food_item = db.relationship("FoodItem", back_populates="meal_foods", lazy="select")
 
     def to_dict(self):
         return {
@@ -128,6 +145,12 @@ class DietPlan(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
 
     name = db.Column(db.String(100))
+
+    # Relaciones
+    user = db.relationship("Usuario", back_populates="diet_plans", lazy="select")
+    diet_plan_meals = db.relationship(
+        "DietPlanMeal", back_populates="diet_plan", lazy="select"
+    )
 
     def to_dict(self):
         return {
@@ -162,6 +185,10 @@ class DietPlanMeal(db.Model):
     day = db.Column(db.Enum(WeekDay), nullable=False)
 
     quantity = db.Column(db.Float, nullable=False)
+
+    # Relaciones
+    diet_plan = db.relationship("DietPlan", back_populates="diet_plan_meals", lazy="select")
+    meal = db.relationship("Meal", back_populates="diet_plan_meals", lazy="select")
 
     def to_dict(self):
         return {
