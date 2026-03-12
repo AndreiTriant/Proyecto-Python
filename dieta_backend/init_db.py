@@ -1,10 +1,12 @@
 """
-Script para crear las tablas en la base de datos.
-Ejecutar cuando la tabla 'usuarios' (u otras) no exista.
-Al importar app se registran los modelos (models).
+Script auxiliar para aplicar migraciones en la base de datos usando Flask-Migrate.
+Debe ejecutarse después de haber configurado las migraciones (flask db init/migrate/upgrade).
 """
-from app import app, db  # noqa: F401
+from flask_migrate import upgrade
 
-with app.app_context():
-    db.create_all()
-    print("Tablas creadas correctamente en instance/app.db")
+from app import app  # noqa: F401
+
+if __name__ == "__main__":
+    with app.app_context():
+        upgrade()
+        print("Migraciones aplicadas correctamente en instance/app.db")

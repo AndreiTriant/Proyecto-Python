@@ -6,7 +6,7 @@ Proyecto fullstack: backend Flask (Python) + frontend React. Base de datos SQLit
 
 ## Arrancar el proyecto (ya instalado)
 
-**Backend** (en una terminal):
+**Backend** (en una terminal, con el entorno ya creado e instalado):
 
 ```powershell
 cd dieta_backend
@@ -15,6 +15,23 @@ python app.py
 ```
 
 → Backend en **http://127.0.0.1:8080**
+
+Si cambias los modelos, usa migraciones:
+
+```powershell
+cd dieta_backend
+venv\Scripts\activate
+python -m flask --app app db migrate -m "descripcion del cambio"
+python -m flask --app app db upgrade
+```
+
+Para cargar datos de ejemplo:
+
+```powershell
+cd dieta_backend
+venv\Scripts\activate
+python seed_data.py
+```
 
 **Frontend** (en otra terminal):
 
@@ -70,13 +87,27 @@ npm start
    pip install -r requirements.txt
    ```
 
-6. **Arrancar el backend**
+6. **Crear la base de datos y aplicar el esquema inicial (solo la primera vez)**
 
    ```powershell
-   python app.py
+   # Dentro de dieta_backend y con el venv activado
+   python -m flask --app app db upgrade
    ```
 
-   La primera vez se crea la base de datos en `dieta_backend/instance/app.db` y la tabla `usuarios`.
+7. **Opcional: insertar datos de ejemplo**
+
+   ```powershell
+   python seed_data.py
+   ```
+
+8. **Arrancar el backend**
+
+```powershell
+python app.py
+```
+
+La base de datos está en `dieta_backend/instance/app.db`.
+Las tablas se gestionan ahora con **Flask-Migrate** (migraciones Alembic).
 
 ### 2. Frontend (React)
 
@@ -104,7 +135,19 @@ npm start
 
 ## Estructura del proyecto
 
-- **dieta_backend/** — API Flask, SQLite (SQLAlchemy). Rutas: `/`, `/api/autor`, `/api/usuarios`, **POST** `/api/registro`, **POST** `/api/login`. Contraseñas hasheadas (werkzeug), consultas parametrizadas (SQLAlchemy).
+- **dieta_backend/** — API Flask, SQLite (SQLAlchemy). Rutas principales:
+  - `/`
+  - `/api/usuarios`
+  - **POST** `/api/registro`
+  - **POST** `/api/login`
+  - `/api/food_items`
+  - `/api/meals` (requiere `user_id` via query param o header `X-User-Id`)
+  - `/api/meals/<meal_id>`
+  - `/api/diet_plans` (requiere `user_id`)
+  - `/api/diet_plans/<plan_id>`
+
+  Contraseñas hasheadas (werkzeug), consultas parametrizadas (SQLAlchemy).
 - **dietas_frontend/** — React (Create React App), rutas `/`, `/registro`, `/login`. Sin estilos (pendiente para más adelante).
 
-La base de datos está en `dieta_backend/instance/app.db` (no se sube a Git). Si tenías una versión anterior del esquema (tabla `usuarios` con `nombre`), borra `instance/app.db` y vuelve a arrancar el backend para crear las tablas de login (`usuario`, `email`, `password_hash`).
+La base de datos está en `dieta_backend/instance/app.db` (no se sube a Git).
+Ya no es necesario borrar el fichero para aplicar cambios de esquema: usa migraciones con `flask db migrate` y `flask db upgrade`.
