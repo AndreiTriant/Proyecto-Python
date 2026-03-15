@@ -1,0 +1,130 @@
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f7f8fa;
+}
+
+.app-sidebar {
+  width: 220px;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sidebar-brand {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1.1rem;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+}
+
+.sidebar-nav a {
+  display: block;
+  padding: 0.6rem 1rem;
+  color: #6b7280;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-nav a:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.sidebar-nav a.active {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.user-name {
+  display: block;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-logout {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-logout:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.app-main {
+  flex: 1;
+  padding: 1.5rem;
+  overflow: auto;
+}
+
+@media (max-width: 768px) {
+  .app-sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sidebar-header {
+    border-bottom: none;
+    padding: 0.75rem 1rem;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex: 1 1 100%;
+    order: 3;
+    padding: 0.5rem 0;
+    border-top: 1px solid #e5e7eb;
+    gap: 0.25rem;
+  }
+
+  .sidebar-nav a {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem;
+  }
+
+  .sidebar-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-top: none;
+  }
+
+  .user-name {
+    margin-bottom: 0;
+  }
+
+  .btn-logout {
+    width: auto;
+  }
+}
