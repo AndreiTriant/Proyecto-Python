@@ -49,7 +49,7 @@ export default function DietaEditar() {
   }
 
   return (
-    <div className="editor-page">
+    <div className="editor-page diet-editor-page">
       <header className="page-header">
         <h1>{diet.name || "Editar dieta"}</h1>
         <button type="button" onClick={() => navigate("/dietas")}>

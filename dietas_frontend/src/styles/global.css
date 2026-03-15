@@ -19,6 +19,12 @@ body {
   color: var(--text);
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 .page-header {
   display: flex;
   align-items: center;
@@ -71,6 +77,10 @@ body {
   text-decoration: none;
   font-size: 0.9rem;
   cursor: pointer;
+  width: auto;
+  max-width: 100%;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .btn-primary:hover {
@@ -84,6 +94,10 @@ body {
   border-radius: 4px;
   background: white;
   cursor: pointer;
+  width: auto;
+  max-width: 100%;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .badge {
@@ -226,6 +240,8 @@ body {
   border-radius: 8px;
   max-width: 420px;
   width: 90%;
+  max-height: 88vh;
+  overflow-y: auto;
 }
 
 .modal-content label {
@@ -284,6 +300,10 @@ body {
 /* Editor pages */
 .editor-page {
   max-width: 640px;
+}
+
+.diet-editor-page {
+  max-width: 1400px;
 }
 
 .editor-page label {
@@ -356,4 +376,8 @@ body {
   padding: 0;
   margin: 0;
   font-size: 0.9rem;
+}
+
+button {
+  font: inherit;
 }

@@ -14,15 +14,40 @@ def _get_uid():
     return uid, None
 
 
+def _serialize_meal(template, include_components=True):
+    out = template.to_dict()
+    components = list(template.components)
+    out["components_count"] = len(components)
+    if include_components:
+        out["components"] = [component.to_dict() for component in components]
+    return out
+
+
+def _recalculate_template_from_components(template):
+    template.calories = sum(component.calories or 0 for component in template.components)
+    template.protein = sum(component.protein or 0 for component in template.components)
+    template.fat = sum(component.fat or 0 for component in template.components)
+    template.carbs = sum(component.carbs or 0 for component in template.components)
+
+
 @bp.route("/meals")
 def list_meals():
     uid, err = _get_uid()
     if err:
         return err
+    query = (request.args.get("q") or "").strip()
+    include_components = (request.args.get("include_components") or "1").lower() not in {
+        "0",
+        "false",
+        "no",
+    }
+    stmt = db.select(MealTemplate).where(MealTemplate.user_id == uid)
+    if query:
+        stmt = stmt.where(MealTemplate.name.ilike(f"%{query}%"))
     templates = db.session.execute(
-        db.select(MealTemplate).where(MealTemplate.user_id == uid)
+        stmt.order_by(MealTemplate.name.asc(), MealTemplate.created_at.desc())
     ).scalars().all()
-    return jsonify([t.to_dict() for t in templates])
+    return jsonify([_serialize_meal(template, include_components=include_components) for template in templates])
 
 
 @bp.route("/meals", methods=["POST"])
@@ -46,7 +71,7 @@ def create_meal():
     )
     db.session.add(t)
     db.session.commit()
-    return jsonify(t.to_dict()), 201
+    return jsonify(_serialize_meal(t)), 201
 
 
 @bp.route("/meals/<int:meal_id>")
@@ -57,9 +82,7 @@ def get_meal(meal_id):
     t = db.session.get(MealTemplate, meal_id)
     if not t or t.user_id != uid:
         return jsonify({"ok": False, "error": "Comida no encontrada."}), 404
-    out = t.to_dict()
-    out["components"] = [c.to_dict() for c in t.components]
-    return jsonify(out)
+    return jsonify(_serialize_meal(t))
 
 
 @bp.route("/meals/<int:meal_id>", methods=["PUT"])
@@ -86,7 +109,7 @@ def update_meal(meal_id):
     if "carbs" in data:
         t.carbs = float(data.get("carbs", 0))
     db.session.commit()
-    return jsonify(t.to_dict())
+    return jsonify(_serialize_meal(t))
 
 
 @bp.route("/meals/<int:meal_id>", methods=["DELETE"])
@@ -110,12 +133,9 @@ def recalculate_nutrition(meal_id):
     t = db.session.get(MealTemplate, meal_id)
     if not t or t.user_id != uid:
         return jsonify({"ok": False, "error": "Comida no encontrada."}), 404
-    t.calories = sum(c.calories or 0 for c in t.components)
-    t.protein = sum(c.protein or 0 for c in t.components)
-    t.fat = sum(c.fat or 0 for c in t.components)
-    t.carbs = sum(c.carbs or 0 for c in t.components)
+    _recalculate_template_from_components(t)
     db.session.commit()
-    return jsonify(t.to_dict())
+    return jsonify(_serialize_meal(t))
 
 
 @bp.route("/meals/<int:meal_id>/components", methods=["POST"])
@@ -141,8 +161,11 @@ def add_component(meal_id):
         carbs=float(data.get("carbs") or 0),
     )
     db.session.add(c)
+    if data.get("recalculate", False):
+        db.session.flush()
+        _recalculate_template_from_components(t)
     db.session.commit()
-    return jsonify(c.to_dict()), 201
+    return jsonify({"component": c.to_dict(), "meal": _serialize_meal(t)}), 201
 
 
 @bp.route("/meal-components/<int:comp_id>", methods=["PUT"])
@@ -170,8 +193,10 @@ def update_component(comp_id):
         c.fat = float(data.get("fat", 0))
     if "carbs" in data:
         c.carbs = float(data.get("carbs", 0))
+    if data.get("recalculate", False):
+        _recalculate_template_from_components(c.meal_template)
     db.session.commit()
-    return jsonify(c.to_dict())
+    return jsonify({"component": c.to_dict(), "meal": _serialize_meal(c.meal_template)})
 
 
 @bp.route("/meal-components/<int:comp_id>", methods=["DELETE"])
@@ -184,6 +209,10 @@ def delete_component(comp_id):
         return jsonify({"ok": False, "error": "Componente no encontrado."}), 404
     if c.meal_template.user_id != uid:
         return jsonify({"ok": False, "error": "No autorizado."}), 403
+    meal_template = c.meal_template
     db.session.delete(c)
+    db.session.flush()
+    if request.args.get("recalculate", "0").lower() in {"1", "true", "yes"}:
+        _recalculate_template_from_components(meal_template)
     db.session.commit()
-    return jsonify({"ok": True}), 200
+    return jsonify({"ok": True, "meal": _serialize_meal(meal_template)}), 200

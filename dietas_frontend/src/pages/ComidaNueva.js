@@ -6,8 +6,8 @@ export default function ComidaNueva() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const onSaved = (id) => {
-    if (id) navigate(`/comidas/${id}`);
+  const onSaved = (savedMeal) => {
+    if (savedMeal?.id) navigate(`/comidas/${savedMeal.id}`);
     else navigate("/comidas");
   };
 

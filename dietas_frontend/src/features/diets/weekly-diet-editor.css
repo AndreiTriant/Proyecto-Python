@@ -1,0 +1,426 @@
+.weekly-diet-editor {
+  display: grid;
+  gap: 1rem;
+}
+
+.weekly-editor-topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  border-radius: 24px;
+  border: 1px solid rgba(79, 70, 229, 0.12);
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(255, 255, 255, 1));
+}
+
+.weekly-editor-topbar h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.6rem;
+}
+
+.weekly-editor-topbar p {
+  margin: 0;
+}
+
+.weekly-editor-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.weekly-editor-topbar-side {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: end;
+}
+
+.weekly-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.12);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.modern-diet-days-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 1.1rem;
+  align-items: start;
+}
+
+.modern-day-column {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  width: 100%;
+  align-content: start;
+  padding: 1rem;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(248, 250, 252, 0.95));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.06);
+}
+
+.day-column-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.day-column-kicker {
+  margin: 0 0 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.day-column-head h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.day-column-head p {
+  margin: 0.25rem 0 0;
+}
+
+.day-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.meal-search-shell {
+  position: relative;
+}
+
+.meal-search-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0.7rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.meal-search-results {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.meal-search-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(79, 70, 229, 0.14);
+  border-radius: 16px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.meal-search-result span {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.meal-search-result small {
+  color: var(--text-muted);
+}
+
+.meal-search-hint {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.empty-day-card {
+  padding: 1rem;
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.empty-day-card p,
+.empty-day-card span {
+  margin: 0;
+  display: block;
+}
+
+.empty-day-card span {
+  margin-top: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.day-meals-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-content: start;
+}
+
+.assigned-meal-card {
+  position: relative;
+  display: grid;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.assigned-meal-card-dragging {
+  z-index: 30;
+  box-shadow: 0 26px 50px rgba(79, 70, 229, 0.18);
+  border-color: rgba(79, 70, 229, 0.35);
+}
+
+.assigned-meal-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.assigned-meal-card-head h4 {
+  margin: 0.25rem 0 0;
+  font-size: 1rem;
+}
+
+.assigned-meal-order {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.09);
+  color: var(--primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(79, 70, 229, 0.16);
+  border-radius: 12px;
+  background: rgba(79, 70, 229, 0.06);
+  color: var(--primary);
+  font-weight: 600;
+  padding: 0.55rem 0.8rem;
+  cursor: grab;
+  align-self: flex-start;
+  white-space: nowrap;
+  width: auto;
+  font-size: 0.9rem;
+  touch-action: none;
+}
+
+.assigned-meal-chip-row,
+.assigned-meal-footer,
+.meal-label-editor {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.assigned-meal-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.assigned-meal-chip-label {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0369a1;
+}
+
+.assigned-meal-chip-info {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text);
+}
+
+.assigned-meal-link {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 0;
+  font-weight: 600;
+}
+
+.modern-day-column .btn-primary,
+.modern-day-column .btn-sm,
+.assigned-meal-card .btn-sm,
+.drag-handle {
+  width: fit-content;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.modern-day-column .btn-primary {
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+}
+
+.modern-day-column .btn-sm,
+.assigned-meal-card .btn-sm {
+  padding: 0.5rem 0.8rem;
+  border-radius: 10px;
+}
+
+.assigned-meal-macros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.assigned-meal-macros span {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.08);
+  color: #4338ca;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.assigned-meal-footer {
+  justify-content: space-between;
+}
+
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.modern-tooltip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.75rem);
+  z-index: 20;
+  width: min(360px, 80vw);
+  padding: 0.9rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.96);
+  color: #fff;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.3);
+}
+
+.modern-tooltip strong {
+  display: block;
+  margin-bottom: 0.65rem;
+}
+
+.modern-tooltip ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.modern-tooltip li {
+  display: grid;
+  gap: 0.2rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.modern-tooltip li:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.tooltip-wrapper:hover .modern-tooltip,
+.tooltip-wrapper:focus-within .modern-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.assigned-meal-card-dragging .modern-tooltip {
+  display: none;
+}
+
+.error-banner {
+  color: var(--error);
+  border-left: 4px solid var(--error);
+}
+
+.success-banner {
+  color: var(--success);
+  border-left: 4px solid var(--success);
+}
+
+.modal-content-wide {
+  max-width: 980px;
+}
+
+.modal-sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.copy-day-modal {
+  max-width: 460px;
+}
+
+@media (max-width: 900px) {
+  .weekly-editor-topbar,
+  .day-column-head,
+  .assigned-meal-card-head,
+  .assigned-meal-footer,
+  .modal-sheet-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .weekly-editor-topbar-side {
+    justify-items: start;
+  }
+
+  .meal-search-result {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .day-column-head > .btn-sm,
+  .assigned-meal-card-head > .drag-handle,
+  .assigned-meal-footer > .btn-sm,
+  .modal-sheet-head > .btn-sm,
+  .day-actions > .btn-primary {
+    align-self: flex-start;
+  }
+}
