@@ -1,5 +1,9 @@
-# Entorno virtual Python
+# Entorno virtual Python (cualquier ubicación)
+venv/
+.venv/
 dieta_backend/venv/
+**/venv/
+**/.venv/
 
 # Dependencias Node
 dietas_frontend/node_modules/

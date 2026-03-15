@@ -6,7 +6,15 @@ Proyecto fullstack: backend Flask (Python) + frontend React. Base de datos SQLit
 
 ## Arrancar el proyecto (ya instalado)
 
-**Backend** (en una terminal, con el entorno ya creado e instalado):
+**Opción rápida** (backend + frontend en dos ventanas):
+
+```powershell
+.\iniciar_proyecto.ps1
+```
+
+→ Backend en **http://127.0.0.1:8080** · Frontend en **http://localhost:3000**
+
+**Manual** — Backend (en una terminal, con el entorno ya creado e instalado):
 
 ```powershell
 cd dieta_backend
