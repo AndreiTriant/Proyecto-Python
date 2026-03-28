@@ -1,15 +1,21 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { API_URL, USUARIO_MAX_LEN, PASSWORD_MIN_LEN, PASSWORD_MAX_LEN, validarEmail } from "../../constantes";
+import { useAuth } from "../../context/AuthContext";
+import { apiFetch } from "../../services/api";
 
 function Registro() {
+  const { refreshUser } = useAuth();
   const [usuario, setUsuario] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [mensajeUsuario, setMensajeUsuario] = useState("");
   const [mensajeEmail, setMensajeEmail] = useState("");
   const [mensajePassword, setMensajePassword] = useState("");
+  const [mensajePasswordConfirm, setMensajePasswordConfirm] = useState("");
   const [mensajeGeneral, setMensajeGeneral] = useState("");
+  const [cuentaCreada, setCuentaCreada] = useState(false);
   const [enviado, setEnviado] = useState(false);
 
   function validarYEnviar(e) {
@@ -17,7 +23,9 @@ function Registro() {
     setMensajeUsuario("");
     setMensajeEmail("");
     setMensajePassword("");
+    setMensajePasswordConfirm("");
     setMensajeGeneral("");
+    setCuentaCreada(false);
 
     let hayError = false;
     const userNormalizado = usuario.trim();
@@ -43,11 +51,14 @@ function Registro() {
     } else if (password.length > PASSWORD_MAX_LEN) {
       setMensajePassword(`La contraseña no puede superar ${PASSWORD_MAX_LEN} caracteres.`);
       hayError = true;
+    } else if (password !== passwordConfirm) {
+      setMensajePasswordConfirm("Las contraseñas no coinciden.");
+      hayError = true;
     }
     if (hayError) return;
 
     setEnviado(true);
-    fetch(`${API_URL}/api/registro`, {
+    apiFetch(`${API_URL}/api/registro`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -57,13 +68,17 @@ function Registro() {
       }),
     })
       .then((res) => res.json().then((data) => ({ status: res.status, data })))
-      .then(({ status, data }) => {
+      .then(async ({ status, data }) => {
         setEnviado(false);
         if (data.ok) {
-          setMensajeGeneral("Registro correcto. Ya puedes iniciar sesión.");
+          // El backend ya abre sesión (cookie); sincronizamos el contexto sin recargar la página.
+          await refreshUser();
+          setCuentaCreada(true);
+          setMensajeGeneral("Cuenta creada. Ya has iniciado sesión.");
           setUsuario("");
           setEmail("");
           setPassword("");
+          setPasswordConfirm("");
           return;
         }
         setMensajeGeneral(data.error || "Error en el registro.");
@@ -113,12 +128,31 @@ function Registro() {
             onChange={(e) => setPassword(e.target.value)}
             maxLength={PASSWORD_MAX_LEN + 1}
             disabled={enviado}
+            autoComplete="new-password"
           />
           {mensajePassword && !mensajeGeneral && <p className="error-msg">{mensajePassword}</p>}
         </div>
+        <div>
+          <label htmlFor="reg-password-confirm">Confirmar contraseña</label>
+          <input
+            id="reg-password-confirm"
+            type="password"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            maxLength={PASSWORD_MAX_LEN + 1}
+            disabled={enviado}
+            autoComplete="new-password"
+          />
+          {mensajePasswordConfirm && !mensajeGeneral && (
+            <p className="error-msg">{mensajePasswordConfirm}</p>
+          )}
+        </div>
         {mensajeGeneral && (
-          <p className={mensajeGeneral.includes("correcto") ? "success-msg" : "error-msg"}>
-            {mensajeGeneral}
+          <p className={cuentaCreada ? "success-msg" : "error-msg"}>{mensajeGeneral}</p>
+        )}
+        {cuentaCreada && (
+          <p>
+            <Link to="/dashboard">Ir al panel</Link>
           </p>
         )}
         <button type="submit" disabled={enviado}>

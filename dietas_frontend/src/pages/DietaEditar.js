@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { API_URL } from "../constantes";
+import { apiFetch } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import WeeklyDietEditor from "../features/diets/WeeklyDietEditor";
 
@@ -13,7 +14,7 @@ export default function DietaEditar() {
 
   const refetch = () => {
     if (!user?.id || !id) return;
-    fetch(`${API_URL}/api/diets/${id}?user_id=${user.id}`)
+    apiFetch(`${API_URL}/api/diets/${id}?user_id=${user.id}`)
       .then((res) => res.json())
       .then((data) => {
         if (!data.error) setDiet(data);
@@ -26,7 +27,7 @@ export default function DietaEditar() {
       return;
     }
     setLoading(true);
-    fetch(`${API_URL}/api/diets/${id}?user_id=${user.id}`)
+    apiFetch(`${API_URL}/api/diets/${id}?user_id=${user.id}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.error) setDiet(null);

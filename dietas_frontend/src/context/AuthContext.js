@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { API_URL } from "../constantes";
+import { apiFetch } from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -7,13 +8,14 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const loadStoredUser = useCallback(() => {
+  /** Restaura usuario desde la cookie de sesión (GET /api/me). */
+  const refreshUser = useCallback(async () => {
     try {
-      const raw = localStorage.getItem("dieta_user");
-      if (raw) {
-        const u = JSON.parse(raw);
-        setUser(u);
-        return u;
+      const res = await apiFetch(`${API_URL}/api/me`);
+      const data = await res.json();
+      if (data.ok && data.usuario) {
+        setUser(data.usuario);
+        return data.usuario;
       }
     } catch (_) {}
     setUser(null);
@@ -21,12 +23,23 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    loadStoredUser();
-    setLoading(false);
-  }, [loadStoredUser]);
+    // Sesión real = cookie HttpOnly del servidor; no guardamos usuario en localStorage (evita XSS leyendo token).
+    // Borramos clave antigua por si quedó de una versión previa del MVP.
+    try {
+      localStorage.removeItem("dieta_user");
+    } catch (_) {}
+    let cancelled = false;
+    (async () => {
+      await refreshUser();
+      if (!cancelled) setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshUser]);
 
   const login = useCallback(async (email, password) => {
-    const res = await fetch(`${API_URL}/api/login`, {
+    const res = await apiFetch(`${API_URL}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
@@ -34,15 +47,16 @@ export function AuthProvider({ children }) {
     const data = await res.json();
     if (data.ok && data.usuario) {
       setUser(data.usuario);
-      localStorage.setItem("dieta_user", JSON.stringify(data.usuario));
       return { ok: true, usuario: data.usuario };
     }
     return { ok: false, error: data.error || "Error al iniciar sesión." };
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await apiFetch(`${API_URL}/api/logout`, { method: "POST" });
+    } catch (_) {}
     setUser(null);
-    localStorage.removeItem("dieta_user");
   }, []);
 
   const value = {
@@ -51,7 +65,7 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!user,
     login,
     logout,
-    refreshUser: loadStoredUser,
+    refreshUser,
   };
 
   return (

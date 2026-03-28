@@ -1,4 +1,5 @@
 import { API_URL } from "../../constantes";
+import { apiFetch } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -13,7 +14,7 @@ export default function DietManager() {
       setLoading(false);
       return;
     }
-    fetch(`${API_URL}/api/diets?user_id=${user.id}`)
+    apiFetch(`${API_URL}/api/diets?user_id=${user.id}`)
       .then((res) => res.json())
       .then((data) => setDiets(Array.isArray(data) ? data : []))
       .catch(() => setDiets([]))
@@ -21,7 +22,7 @@ export default function DietManager() {
   }, [user?.id]);
 
   const activate = (id) => {
-    fetch(`${API_URL}/api/diets/${id}/activate?user_id=${user.id}`, {
+    apiFetch(`${API_URL}/api/diets/${id}/activate?user_id=${user.id}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),

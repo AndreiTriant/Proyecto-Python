@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from config import (
@@ -51,6 +51,10 @@ def registro():
     nuevo = models.Usuario(usuario=usuario, email=email, password_hash=password_hash)
     db.session.add(nuevo)
     db.session.commit()
+    # Iniciar sesión en cookie HttpOnly (misma política que login).
+    session.clear()
+    session["user_id"] = nuevo.id
+    session.permanent = True
     return jsonify({"ok": True, "usuario": nuevo.to_dict()}), 201
 
 
@@ -73,4 +77,33 @@ def login():
     if not check_password_hash(user.password_hash, password):
         return jsonify({"ok": False, "error": "Correo o contraseña incorrectos."}), 401
 
+    # Cookie de sesión firmada (HttpOnly se configura en app); user_id no sale en el cuerpo como secreto.
+    session.clear()
+    session["user_id"] = user.id
+    session.permanent = True
+    return jsonify({"ok": True, "usuario": user.to_dict()})
+
+
+@bp.route("/logout", methods=["POST"])
+def logout():
+    """Cierra sesión y borra la cookie de sesión."""
+    session.clear()
+    return jsonify({"ok": True})
+
+
+@bp.route("/me", methods=["GET"])
+def me():
+    """Usuario autenticado por cookie de sesión (sin token en localStorage)."""
+    uid = session.get("user_id")
+    if uid is None:
+        return jsonify({"ok": False, "error": "No autenticado."}), 401
+    try:
+        uid = int(uid)
+    except (TypeError, ValueError):
+        session.clear()
+        return jsonify({"ok": False, "error": "No autenticado."}), 401
+    user = db.session.get(models.Usuario, uid)
+    if not user:
+        session.clear()
+        return jsonify({"ok": False, "error": "No autenticado."}), 401
     return jsonify({"ok": True, "usuario": user.to_dict()})

@@ -1,4 +1,5 @@
 import { API_URL } from "../../constantes";
+import { apiFetch } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
 
@@ -20,7 +21,7 @@ export default function WeightTracker() {
     from.setMonth(from.getMonth() - 3);
     const fromStr = from.toISOString().slice(0, 10);
     const toStr = to.toISOString().slice(0, 10);
-    fetch(
+    apiFetch(
       `${API_URL}/api/weights?user_id=${user.id}&from=${fromStr}&to=${toStr}`
     )
       .then((res) => res.json())
@@ -34,7 +35,7 @@ export default function WeightTracker() {
     if (!user?.id || !weight) return;
     setSaving(true);
     const today = new Date().toISOString().slice(0, 10);
-    fetch(`${API_URL}/api/weights?user_id=${user.id}`, {
+    apiFetch(`${API_URL}/api/weights?user_id=${user.id}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

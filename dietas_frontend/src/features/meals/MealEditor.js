@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { API_URL } from "../../constantes";
+import { apiFetch } from "../../services/api";
 import "./meal-editor.css";
 
 const EMPTY_COMPONENT = {
@@ -32,7 +33,7 @@ function createDraftComponent(component = {}) {
 }
 
 async function requestJson(url, options = {}) {
-  const response = await fetch(url, options);
+  const response = await apiFetch(url, options);
   const data = await response.json();
   if (!response.ok || data?.error) {
     throw new Error(data?.error || "No se pudo completar la petición.");

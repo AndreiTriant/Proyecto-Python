@@ -1,4 +1,5 @@
 import { API_URL } from "../../constantes";
+import { apiFetch } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
 
@@ -13,7 +14,7 @@ export default function ActiveDietCard() {
       return;
     }
     const url = `${API_URL}/api/diets?user_id=${user.id}`;
-    fetch(url)
+    apiFetch(url)
       .then((res) => res.json())
       .then((data) => {
         const active = Array.isArray(data) ? data.find((d) => d.is_active) : null;

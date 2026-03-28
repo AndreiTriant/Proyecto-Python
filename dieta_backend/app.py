@@ -1,30 +1,43 @@
 """
 Aplicación Flask. Crea app, vincula db (extensions) con init_app, registra modelos y blueprints.
+Sesión: cookie firmada HttpOnly (Flask session); el front debe enviar credentials en fetch/CORS.
 """
+from datetime import timedelta
 from pathlib import Path
 
-from flask import Flask, request
+from flask import Flask
 from flask_cors import CORS
 
+from config import (
+    FLASK_SECRET_KEY,
+    SESSION_COOKIE_SAMESITE,
+    SESSION_COOKIE_SECURE,
+    SESSION_LIFETIME_DAYS,
+)
 from extensions import db, migrate
 from routes import auth_bp, diets_bp, meals_bp, tracking_bp, progress_bp
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev-change-in-production"
-CORS(app, origins=["http://localhost:3000", "http://127.0.0.1:3000"], supports_credentials=False)
+# Clave para firmar la cookie de sesión; en producción usar FLASK_SECRET_KEY en el entorno.
+app.config["SECRET_KEY"] = FLASK_SECRET_KEY or "dev-change-in-production"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SECURE"] = SESSION_COOKIE_SECURE
+# Lax: cookies no se envían en requests cross-site "complejos"; por eso en dev conviene proxy + URLs relativas.
+# Cross-site real (front y API en dominios distintos) en HTTPS suele requerir SameSite=None + Secure (ver config.py / README).
+app.config["SESSION_COOKIE_SAMESITE"] = SESSION_COOKIE_SAMESITE
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=SESSION_LIFETIME_DAYS)
 
-ALLOWED_ORIGINS = ("http://localhost:3000", "http://127.0.0.1:3000")
-
-
-@app.after_request
-def add_cors_headers(response):
-    origin = request.environ.get("HTTP_ORIGIN", "http://localhost:3000")
-    if origin not in ALLOWED_ORIGINS:
-        origin = "http://localhost:3000"
-    response.headers["Access-Control-Allow-Origin"] = origin
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    return response
+# Orígenes explícitos: con supports_credentials no se puede usar "*".
+# Si el front usa solo el proxy (mismo origen en la práctica), igual hace falta para preflight u orígenes distintos.
+CORS_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+# True: Access-Control-Allow-Credentials y el cliente puede usar fetch(..., { credentials: "include" }).
+CORS(
+    app,
+    origins=CORS_ORIGINS,
+    supports_credentials=True,
+    allow_headers=["Content-Type"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+)
 
 
 # Base de datos

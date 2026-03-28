@@ -1,4 +1,5 @@
 import { API_URL } from "../../constantes";
+import { apiFetch } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
 
@@ -13,7 +14,7 @@ export default function NutritionChart() {
     from.setDate(from.getDate() - 30);
     const fromStr = from.toISOString().slice(0, 10);
     const toStr = to.toISOString().slice(0, 10);
-    fetch(
+    apiFetch(
       `${API_URL}/api/progress/overview?user_id=${user.id}&from=${fromStr}&to=${toStr}`
     )
       .then((res) => res.json())

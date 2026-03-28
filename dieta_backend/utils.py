@@ -1,6 +1,6 @@
 """Utilidades compartidas para rutas."""
 import re
-from flask import request
+from flask import has_request_context, request, session
 
 from config import EMAIL_MAX_LEN
 
@@ -19,9 +19,16 @@ def validar_email(email):
 
 def get_user_id_from_request():
     """
-    Obtiene el user_id de la petición.
-    Query param ?user_id= o header X-User-Id. Para MVP sin auth real.
+    Obtiene el user_id: primero sesión (cookie HttpOnly tras login; preferido en app con cookies),
+    luego ?user_id= o cabecera X-User-Id (herramientas o código que aún pasa el id en query).
     """
+    if has_request_context():
+        sid = session.get("user_id")
+        if sid is not None:
+            try:
+                return int(sid)
+            except (TypeError, ValueError):
+                pass
     user_id = request.args.get("user_id")
     if user_id is not None:
         try:

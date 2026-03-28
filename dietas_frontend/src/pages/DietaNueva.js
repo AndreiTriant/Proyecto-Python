@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../constantes";
+import { apiFetch } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 export default function DietaNueva() {
@@ -15,7 +16,7 @@ export default function DietaNueva() {
     if (!user?.id) return;
     setSaving(true);
     setError("");
-    fetch(`${API_URL}/api/diets?user_id=${user.id}`, {
+    apiFetch(`${API_URL}/api/diets?user_id=${user.id}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: name.trim() || "Mi dieta" }),

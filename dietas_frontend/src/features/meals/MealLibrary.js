@@ -1,4 +1,5 @@
 import { API_URL } from "../../constantes";
+import { apiFetch } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -13,7 +14,7 @@ export default function MealLibrary() {
       setLoading(false);
       return;
     }
-    fetch(`${API_URL}/api/meals?user_id=${user.id}`)
+    apiFetch(`${API_URL}/api/meals?user_id=${user.id}`)
       .then((res) => res.json())
       .then((data) => setMeals(Array.isArray(data) ? data : []))
       .catch(() => setMeals([]))

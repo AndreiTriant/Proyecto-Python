@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { API_URL } from "../../constantes";
+import { apiFetch } from "../../services/api";
 import MealEditor from "../meals/MealEditor";
 import DietDayColumn from "./DietDayColumn";
 import "./weekly-diet-editor.css";
@@ -23,7 +24,7 @@ function sortDayMeals(meals = []) {
 }
 
 async function requestJson(url, options = {}) {
-  const response = await fetch(url, options);
+  const response = await apiFetch(url, options);
   const data = await response.json();
   if (!response.ok || data?.error) {
     throw new Error(data?.error || "No se pudo completar la operación.");

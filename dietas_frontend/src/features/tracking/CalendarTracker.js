@@ -1,4 +1,5 @@
 import { API_URL } from "../../constantes";
+import { apiFetch } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
 import DayCheckinModal from "./DayCheckinModal";
@@ -35,7 +36,7 @@ export default function CalendarTracker() {
     }
     const from = `${year}-${String(month + 1).padStart(2, "0")}-01`;
     const to = `${year}-${String(month + 1).padStart(2, "0")}-31`;
-    fetch(`${API_URL}/api/checkins?user_id=${user.id}&from=${from}&to=${to}`)
+    apiFetch(`${API_URL}/api/checkins?user_id=${user.id}&from=${from}&to=${to}`)
       .then((res) => res.json())
       .then((data) => {
         const map = {};
@@ -76,7 +77,7 @@ export default function CalendarTracker() {
     setLoading(true);
     const from = `${year}-${String(month + 1).padStart(2, "0")}-01`;
     const to = `${year}-${String(month + 1).padStart(2, "0")}-31`;
-    fetch(`${API_URL}/api/checkins?user_id=${user.id}&from=${from}&to=${to}`)
+    apiFetch(`${API_URL}/api/checkins?user_id=${user.id}&from=${from}&to=${to}`)
       .then((res) => res.json())
       .then((data) => {
         const map = {};

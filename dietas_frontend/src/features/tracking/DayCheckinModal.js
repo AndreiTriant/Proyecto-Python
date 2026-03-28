@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { API_URL } from "../../constantes";
+import { apiFetch } from "../../services/api";
 
 const STATUSES = [
   { value: "followed_exact", label: "Dieta seguida correctamente" },
@@ -46,7 +47,7 @@ export default function DayCheckinModal({ date, userId, onClose, onSaved }) {
               }))
           : [],
     };
-    fetch(`${API_URL}/api/checkins?user_id=${userId}`, {
+    apiFetch(`${API_URL}/api/checkins?user_id=${userId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
