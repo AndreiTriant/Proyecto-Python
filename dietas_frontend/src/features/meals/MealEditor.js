@@ -7,24 +7,72 @@ const EMPTY_COMPONENT = {
   name: "",
   quantity: "100",
   unit: "g",
-  calories: "0",
-  protein: "0",
-  fat: "0",
-  carbs: "0",
+  calories: "",
+  protein: "",
+  fat: "",
+  carbs: "",
 };
+
+const OPTIONAL_COMPONENT_FIELDS = [
+  { key: "calories", label: "Calorias", shortLabel: "kcal", inputLabel: "Calorias" },
+  { key: "protein", label: "Proteinas", shortLabel: "P", inputLabel: "Proteinas (g)" },
+  { key: "fat", label: "Grasas", shortLabel: "G", inputLabel: "Grasas (g)" },
+  { key: "carbs", label: "Carbohidratos", shortLabel: "C", inputLabel: "Carbohidratos (g)" },
+];
+
+const COMPONENT_UNIT_OPTIONS = ["g", "kg", "mg", "ml", "l", "oz", "lb", "cda"];
+
+function normalizeComponentUnit(unit) {
+  const u = (unit || "").trim() || "g";
+  return COMPONENT_UNIT_OPTIONS.includes(u) ? u : "g";
+}
 
 function toNumericValue(value) {
   const numericValue = Number(value);
   return Number.isFinite(numericValue) ? numericValue : 0;
 }
 
-function createDraftComponent(component = {}) {
+function formatDecimal(value) {
+  return toNumericValue(value).toFixed(1);
+}
+
+function hasMeaningfulNumber(value) {
+  if (value === "" || value === null || value === undefined) {
+    return false;
+  }
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) && numericValue !== 0;
+}
+
+function getEnabledComponentFields(source = []) {
+  return OPTIONAL_COMPONENT_FIELDS.filter(({ key }) =>
+    source.some((component) => hasMeaningfulNumber(component?.[key]))
+  ).map(({ key }) => key);
+}
+
+function sanitizeComponentDraft(component) {
+  const nextComponent = {
+    ...component,
+    name: (component.name || "").trim(),
+    quantity: String(component.quantity ?? ""),
+    unit: normalizeComponentUnit(component.unit),
+  };
+
+  OPTIONAL_COMPONENT_FIELDS.forEach(({ key }) => {
+    nextComponent[key] = hasMeaningfulNumber(component[key]) ? String(component[key]) : "";
+  });
+
+  return nextComponent;
+}
+
+function createDraftComponent(component = {}, forcedTempId = null) {
   return {
     id: component.id || null,
-    tempId: component.id ? `existing-${component.id}` : `draft-${Date.now()}-${Math.random()}`,
+    tempId:
+      forcedTempId || (component.id ? `existing-${component.id}` : `draft-${Date.now()}-${Math.random()}`),
     name: component.name || "",
     quantity: String(component.quantity ?? 0),
-    unit: component.unit || "g",
+    unit: normalizeComponentUnit(component.unit),
     calories: String(component.calories ?? 0),
     protein: String(component.protein ?? 0),
     fat: String(component.fat ?? 0),
@@ -60,6 +108,11 @@ export default function MealEditor({
   const [components, setComponents] = useState((meal?.components || []).map(createDraftComponent));
   const [removedComponentIds, setRemovedComponentIds] = useState([]);
   const [componentDraft, setComponentDraft] = useState({ ...EMPTY_COMPONENT });
+  const [enabledComponentFields, setEnabledComponentFields] = useState(
+    getEnabledComponentFields(meal?.components || [])
+  );
+  const [showComponentBuilder, setShowComponentBuilder] = useState(false);
+  const [editingComponentTempId, setEditingComponentTempId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -75,6 +128,9 @@ export default function MealEditor({
     setComponents((meal?.components || []).map(createDraftComponent));
     setRemovedComponentIds([]);
     setComponentDraft({ ...EMPTY_COMPONENT });
+    setEnabledComponentFields(getEnabledComponentFields(meal?.components || []));
+    setShowComponentBuilder(false);
+    setEditingComponentTempId("");
     setError("");
     setSuccess("");
   }, [meal]);
@@ -99,25 +155,42 @@ export default function MealEditor({
 
   const resetDraft = () => {
     setComponentDraft({ ...EMPTY_COMPONENT });
+    setEditingComponentTempId("");
   };
 
-  const addComponentDraft = () => {
+  const toggleComponentField = (fieldKey) => {
+    setEnabledComponentFields((prev) => {
+      if (prev.includes(fieldKey)) {
+        setComponentDraft((draft) => ({ ...draft, [fieldKey]: "" }));
+        return prev.filter((field) => field !== fieldKey);
+      }
+      setComponentDraft((draft) => ({
+        ...draft,
+        [fieldKey]: draft[fieldKey] === "0" ? "" : draft[fieldKey],
+      }));
+      return [...prev, fieldKey];
+    });
+  };
+
+  const saveComponentDraft = () => {
     if (!componentDraft.name.trim()) {
       setError("El nombre del alimento es obligatorio.");
       return;
     }
-    setComponents((prev) => [...prev, createDraftComponent(componentDraft)]);
+    const nextComponent = createDraftComponent(
+      sanitizeComponentDraft(componentDraft),
+      editingComponentTempId || null
+    );
+    setComponents((prev) =>
+      editingComponentTempId
+        ? prev.map((component) =>
+          component.tempId === editingComponentTempId ? nextComponent : component
+        )
+        : [...prev, nextComponent]
+    );
     setError("");
     setSuccess("");
     resetDraft();
-  };
-
-  const updateComponent = (tempId, field, value) => {
-    setComponents((prev) =>
-      prev.map((component) =>
-        component.tempId === tempId ? { ...component, [field]: value } : component
-      )
-    );
   };
 
   const removeComponent = (tempId) => {
@@ -127,6 +200,32 @@ export default function MealEditor({
         setRemovedComponentIds((ids) => [...ids, componentToDelete.id]);
       }
       return prev.filter((component) => component.tempId !== tempId);
+    });
+    if (editingComponentTempId === tempId) {
+      resetDraft();
+    }
+  };
+
+  const editComponent = (component) => {
+    setShowComponentBuilder(true);
+    setEditingComponentTempId(component.tempId);
+    setComponentDraft({
+      name: component.name || "",
+      quantity: String(component.quantity ?? 0),
+      unit: normalizeComponentUnit(component.unit),
+      calories: hasMeaningfulNumber(component.calories) ? String(component.calories) : "",
+      protein: hasMeaningfulNumber(component.protein) ? String(component.protein) : "",
+      fat: hasMeaningfulNumber(component.fat) ? String(component.fat) : "",
+      carbs: hasMeaningfulNumber(component.carbs) ? String(component.carbs) : "",
+    });
+    setEnabledComponentFields((prev) => {
+      const merged = new Set([
+        ...prev,
+        ...OPTIONAL_COMPONENT_FIELDS.filter(({ key }) => toNumericValue(component[key]) !== 0).map(
+          ({ key }) => key
+        ),
+      ]);
+      return [...merged];
     });
   };
 
@@ -146,14 +245,15 @@ export default function MealEditor({
     }
 
     for (const component of components) {
+      const sanitizedComponent = sanitizeComponentDraft(component);
       const payload = {
-        name: component.name.trim(),
-        quantity: toNumericValue(component.quantity),
-        unit: component.unit.trim() || "g",
-        calories: toNumericValue(component.calories),
-        protein: toNumericValue(component.protein),
-        fat: toNumericValue(component.fat),
-        carbs: toNumericValue(component.carbs),
+        name: sanitizedComponent.name,
+        quantity: toNumericValue(sanitizedComponent.quantity),
+        unit: sanitizedComponent.unit,
+        calories: toNumericValue(sanitizedComponent.calories),
+        protein: toNumericValue(sanitizedComponent.protein),
+        fat: toNumericValue(sanitizedComponent.fat),
+        carbs: toNumericValue(sanitizedComponent.carbs),
       };
 
       if (component.id) {
@@ -208,7 +308,9 @@ export default function MealEditor({
 
       const freshMeal = await requestJson(`${API_URL}/api/meals/${template.id}?user_id=${userId}`);
       setComponents((freshMeal.components || []).map(createDraftComponent));
+      setEnabledComponentFields(getEnabledComponentFields(freshMeal.components || []));
       setRemovedComponentIds([]);
+      resetDraft();
       setSuccess("Comida guardada correctamente.");
       if (onSaved) onSaved(freshMeal);
     } catch (saveError) {
@@ -302,176 +404,182 @@ export default function MealEditor({
           </div>
         </section>
 
-        <section className="meal-editor-section">
-          <div className="section-heading">
+        <div className="meal-components-inline">
+          <div className="meal-components-inline-head">
             <div>
-              <h3>Alimentos que componen la comida</h3>
+              <p className="meal-components-inline-title">Si quieres dejar mas detalle, puedes anadir alimentos</p>
               <p className="text-muted">
-                Añade ingredientes como arroz, pollo o verdura con sus propios valores nutricionales.
+                Guarda solo el desglose que te interese y deja el resto sin completar.
               </p>
             </div>
-            <div className="component-totals">
-              <span>{componentTotals.calories.toFixed(1)} kcal</span>
-              <span>P {componentTotals.protein.toFixed(1)}</span>
-              <span>G {componentTotals.fat.toFixed(1)}</span>
-              <span>C {componentTotals.carbs.toFixed(1)}</span>
-            </div>
+            <button
+              type="button"
+              className="btn-sm"
+              onClick={() => {
+                setShowComponentBuilder((prev) => !prev);
+                if (showComponentBuilder) resetDraft();
+              }}
+            >
+              {showComponentBuilder ? "Ocultar detalle" : components.length ? "Editar desglose" : "Anadir desglose"}
+            </button>
           </div>
 
-          <div className="component-draft card-muted">
-            <div className="component-draft-grid">
-              <label>
-                Alimento
-                <input
-                  value={componentDraft.name}
-                  onChange={(e) => updateComponentDraftField("name", e.target.value)}
-                  placeholder="Pollo"
-                />
-              </label>
-              <label>
-                Cantidad
-                <input
-                  type="number"
-                  step="0.1"
-                  value={componentDraft.quantity}
-                  onChange={(e) => updateComponentDraftField("quantity", e.target.value)}
-                />
-              </label>
-              <label>
-                Unidad
-                <input
-                  value={componentDraft.unit}
-                  onChange={(e) => updateComponentDraftField("unit", e.target.value)}
-                  placeholder="g"
-                />
-              </label>
-              <label>
-                Calorías
-                <input
-                  type="number"
-                  step="0.1"
-                  value={componentDraft.calories}
-                  onChange={(e) => updateComponentDraftField("calories", e.target.value)}
-                />
-              </label>
-              <label>
-                Proteínas
-                <input
-                  type="number"
-                  step="0.1"
-                  value={componentDraft.protein}
-                  onChange={(e) => updateComponentDraftField("protein", e.target.value)}
-                />
-              </label>
-              <label>
-                Grasas
-                <input
-                  type="number"
-                  step="0.1"
-                  value={componentDraft.fat}
-                  onChange={(e) => updateComponentDraftField("fat", e.target.value)}
-                />
-              </label>
-              <label>
-                Carbohidratos
-                <input
-                  type="number"
-                  step="0.1"
-                  value={componentDraft.carbs}
-                  onChange={(e) => updateComponentDraftField("carbs", e.target.value)}
-                />
-              </label>
-            </div>
-            <div className="component-draft-actions">
-              <button type="button" className="btn-primary" onClick={addComponentDraft}>
-                Añadir alimento
-              </button>
-              <button type="button" className="btn-sm" onClick={resetDraft}>
-                Limpiar
-              </button>
-            </div>
-          </div>
+          {components.length > 0 && (
+            <>
+              <div className="component-totals">
+                <span>{componentTotals.calories.toFixed(1)} kcal</span>
+                <span>P {componentTotals.protein.toFixed(1)}</span>
+                <span>G {componentTotals.fat.toFixed(1)}</span>
+                <span>C {componentTotals.carbs.toFixed(1)}</span>
+              </div>
+              <div className="component-chip-list">
+                {components.map((component) => {
+                  const tooltipRows = [
+                    {
+                      label: "Cantidad",
+                      value: `${formatDecimal(component.quantity)} ${component.unit || "g"}`,
+                    },
+                    ...OPTIONAL_COMPONENT_FIELDS.filter(({ key }) => hasMeaningfulNumber(component[key])).map(
+                      ({ key, label, shortLabel }) => ({
+                        label,
+                        value:
+                          key === "calories"
+                            ? `${formatDecimal(component[key])} ${shortLabel}`
+                            : `${formatDecimal(component[key])} g`,
+                      })
+                    ),
+                  ];
 
-          {components.length === 0 ? (
-            <div className="card card-muted">
-              <p>Todavía no has añadido alimentos a esta comida.</p>
-            </div>
-          ) : (
-            <div className="component-list">
-              {components.map((component) => (
-                <article key={component.tempId} className="component-card">
-                  <div className="component-card-head">
-                    <strong>{component.name || "Alimento sin nombre"}</strong>
-                    <button type="button" className="btn-sm" onClick={() => removeComponent(component.tempId)}>
-                      Eliminar
-                    </button>
-                  </div>
-                  <div className="component-draft-grid">
-                    <label>
-                      Nombre
+                  return (
+                    <div
+                      key={component.tempId}
+                      className={`component-chip-wrapper ${editingComponentTempId === component.tempId ? "component-chip-wrapper-active" : ""
+                        }`}
+                    >
+                      <button
+                        type="button"
+                        className="component-chip"
+                        onClick={() => editComponent(component)}
+                      >
+                        {component.name || "Alimento"}
+                      </button>
+                      <button
+                        type="button"
+                        className="component-chip-remove"
+                        aria-label={`Eliminar ${component.name || "alimento"}`}
+                        onClick={() => removeComponent(component.tempId)}
+                      >
+                        x
+                      </button>
+                      <div className="component-chip-tooltip">
+                        <strong>{component.name || "Alimento"}</strong>
+                        <ul>
+                          {tooltipRows.map((row) => (
+                            <li key={`${component.tempId}-${row.label}`}>
+                              <span>{row.label}</span>
+                              <span>{row.value}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {showComponentBuilder && (
+            <div className="component-builder card-muted">
+              <div className="component-builder-head">
+                <div>
+                  <h3>{editingComponentTempId ? "Editar alimento" : "Anadir alimento"}</h3>
+                  <p className="text-muted">
+                    Primero elige que datos quieres guardar para este alimento.
+                  </p>
+                </div>
+                {components.length > 0 && (
+                  <button type="button" className="btn-sm" onClick={applyComponentTotals}>
+                    Recalcular nutricion
+                  </button>
+                )}
+              </div>
+
+              <div className="component-field-picker">
+                {OPTIONAL_COMPONENT_FIELDS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`component-field-toggle ${enabledComponentFields.includes(key) ? "component-field-toggle-active" : ""
+                      }`}
+                    onClick={() => toggleComponentField(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="component-draft-grid">
+                <div className="component-draft-name-qty-row">
+                  <label className="component-draft-name-field">
+                    Alimento
+                    <input
+                      value={componentDraft.name}
+                      onChange={(e) => updateComponentDraftField("name", e.target.value)}
+                      placeholder="Pollo"
+                    />
+                  </label>
+                  <label className="quantity-combined-label component-draft-qty-field">
+                    Cantidad
+                    <div className="quantity-field-row">
                       <input
-                        value={component.name}
-                        onChange={(e) => updateComponent(component.tempId, "name", e.target.value)}
+                        className="quantity-input-part"
+                        type="number"
+                        step="0.1"
+                        value={componentDraft.quantity}
+                        onChange={(e) => updateComponentDraftField("quantity", e.target.value)}
                       />
-                    </label>
-                    <label>
-                      Cantidad
+                      <select
+                        className="quantity-unit-part"
+                        aria-label="Unidad de la cantidad"
+                        value={componentDraft.unit}
+                        onChange={(e) => updateComponentDraftField("unit", e.target.value)}
+                      >
+                        {COMPONENT_UNIT_OPTIONS.map((unitOption) => (
+                          <option key={unitOption} value={unitOption}>
+                            {unitOption}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </label>
+                </div>
+                {OPTIONAL_COMPONENT_FIELDS.filter(({ key }) => enabledComponentFields.includes(key)).map(
+                  ({ key, inputLabel }) => (
+                    <label key={key}>
+                      {inputLabel}
                       <input
                         type="number"
                         step="0.1"
-                        value={component.quantity}
-                        onChange={(e) => updateComponent(component.tempId, "quantity", e.target.value)}
+                        value={componentDraft[key]}
+                        onChange={(e) => updateComponentDraftField(key, e.target.value)}
                       />
                     </label>
-                    <label>
-                      Unidad
-                      <input
-                        value={component.unit}
-                        onChange={(e) => updateComponent(component.tempId, "unit", e.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Calorías
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={component.calories}
-                        onChange={(e) => updateComponent(component.tempId, "calories", e.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Proteínas
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={component.protein}
-                        onChange={(e) => updateComponent(component.tempId, "protein", e.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Grasas
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={component.fat}
-                        onChange={(e) => updateComponent(component.tempId, "fat", e.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Carbohidratos
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={component.carbs}
-                        onChange={(e) => updateComponent(component.tempId, "carbs", e.target.value)}
-                      />
-                    </label>
-                  </div>
-                </article>
-              ))}
+                  )
+                )}
+              </div>
+
+              <div className="component-draft-actions">
+                <button type="button" className="btn-primary" onClick={saveComponentDraft}>
+                  {editingComponentTempId ? "Guardar alimento" : "Anadir alimento"}
+                </button>
+                <button type="button" className="btn-sm" onClick={resetDraft}>
+                  Limpiar
+                </button>
+              </div>
             </div>
           )}
-        </section>
+        </div>
 
         {error && <p className="error-msg">{error}</p>}
         {success && <p className="success-msg">{success}</p>}

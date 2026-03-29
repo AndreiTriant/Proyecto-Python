@@ -10,6 +10,7 @@ export default function SortableDayMealCard({
   assignedMeal,
   onDelete,
   onSaveLabel,
+  onEditMeal,
   busy = false,
 }) {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
@@ -68,9 +69,22 @@ export default function SortableDayMealCard({
             onChange={(event) => setLabelValue(event.target.value)}
             placeholder="Desayuno, comida, cena..."
           />
-          <button type="button" className="btn-sm" onClick={saveLabel} disabled={busy}>
-            Guardar
-          </button>
+          <div className="meal-label-editor-actions">
+            <button type="button" className="btn-sm" onClick={saveLabel} disabled={busy}>
+              Guardar
+            </button>
+            <button
+              type="button"
+              className="btn-sm"
+              onClick={() => {
+                setLabelValue(assignedMeal.label || "");
+                setIsEditingLabel(false);
+              }}
+              disabled={busy}
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       ) : (
         <div className="assigned-meal-chip-row">
@@ -117,9 +131,21 @@ export default function SortableDayMealCard({
           )}
         </div>
 
-        <button type="button" className="btn-sm" onClick={() => onDelete(assignedMeal.id)} disabled={busy}>
-          Eliminar
-        </button>
+        <div className="assigned-meal-footer-actions">
+          {onEditMeal && assignedMeal.meal_template?.id ? (
+            <button
+              type="button"
+              className="btn-sm"
+              onClick={() => onEditMeal(assignedMeal)}
+              disabled={busy}
+            >
+              Editar comida
+            </button>
+          ) : null}
+          <button type="button" className="btn-sm" onClick={() => onDelete(assignedMeal.id)} disabled={busy}>
+            Eliminar
+          </button>
+        </div>
       </div>
     </article>
   );

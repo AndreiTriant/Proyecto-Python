@@ -227,21 +227,31 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(15, 23, 42, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: clamp(0.75rem, 3vw, 1.5rem);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .modal-content {
+  position: relative;
   background: var(--surface);
-  padding: 1.5rem;
-  border-radius: 8px;
-  max-width: 420px;
-  width: 90%;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  border-radius: 18px;
+  max-width: min(92vw, 720px);
+  width: 92%;
   max-height: 88vh;
   overflow-y: auto;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+    0 4px 6px -1px rgba(15, 23, 42, 0.08),
+    0 24px 48px -12px rgba(15, 23, 42, 0.22),
+    0 0 0 4px rgba(79, 70, 229, 0.06);
 }
 
 .modal-content label {

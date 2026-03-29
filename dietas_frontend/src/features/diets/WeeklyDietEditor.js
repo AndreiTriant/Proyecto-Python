@@ -43,6 +43,7 @@ export default function WeeklyDietEditor({ diet, userId, onUpdate }) {
   const [createMealWeekday, setCreateMealWeekday] = useState("");
   const [copySourceWeekday, setCopySourceWeekday] = useState("");
   const [copyTargetWeekday, setCopyTargetWeekday] = useState("");
+  const [editDayMealContext, setEditDayMealContext] = useState(null);
 
   useEffect(() => {
     setDays(sortByWeekday(diet?.days || []));
@@ -256,6 +257,30 @@ export default function WeeklyDietEditor({ diet, userId, onUpdate }) {
     }
   };
 
+  const handleMealTemplateUpdatedFromDiet = (freshMeal) => {
+    const templateId = freshMeal.id;
+    setMealLibrary((prev) => {
+      const exists = prev.some((meal) => meal.id === templateId);
+      const nextMeals = exists
+        ? prev.map((meal) => (meal.id === templateId ? freshMeal : meal))
+        : prev;
+      return exists ? nextMeals : [...prev, freshMeal].sort((left, right) => left.name.localeCompare(right.name));
+    });
+    setDays((prev) =>
+      prev.map((day) => ({
+        ...day,
+        meals: (day.meals || []).map((dm) =>
+          dm.meal_template_id === templateId || dm.meal_template?.id === templateId
+            ? { ...dm, meal_template_id: templateId, meal_template: freshMeal }
+            : dm
+        ),
+      }))
+    );
+    setEditDayMealContext(null);
+    setStatusMessage(`"${freshMeal.name || "Comida"}" actualizada en la dieta y en la biblioteca.`);
+    if (onUpdate) onUpdate();
+  };
+
   const handleMealCreated = async (savedMeal) => {
     const targetWeekday = createMealWeekday;
     setCreateMealWeekday("");
@@ -311,11 +336,49 @@ export default function WeeklyDietEditor({ diet, userId, onUpdate }) {
             }}
             onDeleteMeal={deleteMealFromDay}
             onUpdateMealLabel={updateMealLabel}
+            onEditAssignedMeal={(weekday, assignedMeal) =>
+              setEditDayMealContext({ weekday, assignedMeal })
+            }
             onReorderMeals={reorderMeals}
             busy={busyAction.startsWith("delete-") || busyAction.startsWith("label-")}
           />
         ))}
       </div>
+
+      {editDayMealContext?.assignedMeal?.meal_template?.id && (
+        <div className="modal-overlay">
+          <div className="modal-content modal-content-wide">
+            <div className="modal-sheet-head">
+              <div>
+                <p className="weekly-editor-kicker">
+                  {editDayMealContext.weekday
+                    ? editDayMealContext.weekday.charAt(0).toUpperCase() +
+                      editDayMealContext.weekday.slice(1)
+                    : ""}{" "}
+                  · comida del plan
+                </p>
+                <h3>Editar comida</h3>
+                <p className="text-muted">
+                  Los cambios aplican a esta plantilla: se verán en todos los días de esta dieta (y en la biblioteca)
+                  que usen la misma comida.
+                </p>
+              </div>
+              <button type="button" className="btn-sm" onClick={() => setEditDayMealContext(null)}>
+                Cerrar
+              </button>
+            </div>
+            <MealEditor
+              key={editDayMealContext.assignedMeal.meal_template.id}
+              meal={editDayMealContext.assignedMeal.meal_template}
+              userId={userId}
+              onSaved={handleMealTemplateUpdatedFromDiet}
+              onCancel={() => setEditDayMealContext(null)}
+              saveButtonLabel="Guardar cambios"
+              compact
+            />
+          </div>
+        </div>
+      )}
 
       {createMealWeekday && (
         <div className="modal-overlay">

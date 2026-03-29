@@ -244,6 +244,13 @@
   flex-wrap: wrap;
 }
 
+.meal-label-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .assigned-meal-chip {
   display: inline-flex;
   align-items: center;
@@ -311,6 +318,13 @@
 
 .assigned-meal-footer {
   justify-content: space-between;
+}
+
+.assigned-meal-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .tooltip-wrapper {
@@ -382,7 +396,8 @@
 }
 
 .modal-content-wide {
-  max-width: 980px;
+  max-width: min(96vw, 1240px);
+  width: 96%;
 }
 
 .modal-sheet-head {
@@ -394,7 +409,8 @@
 }
 
 .copy-day-modal {
-  max-width: 460px;
+  max-width: min(92vw, 560px);
+  width: 92%;
 }
 
 @media (max-width: 900px) {

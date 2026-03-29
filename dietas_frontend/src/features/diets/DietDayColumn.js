@@ -16,6 +16,7 @@ export default function DietDayColumn({
   onOpenCopyDay,
   onDeleteMeal,
   onUpdateMealLabel,
+  onEditAssignedMeal,
   onReorderMeals,
   busy = false,
 }) {
@@ -105,6 +106,11 @@ export default function DietDayColumn({
                   assignedMeal={assignedMeal}
                   onDelete={(mealId) => onDeleteMeal(day.weekday, mealId)}
                   onSaveLabel={(mealId, label) => onUpdateMealLabel(day.weekday, mealId, label)}
+                  onEditMeal={
+                    onEditAssignedMeal
+                      ? (meal) => onEditAssignedMeal(day.weekday, meal)
+                      : undefined
+                  }
                   busy={busy}
                 />
               ))}
