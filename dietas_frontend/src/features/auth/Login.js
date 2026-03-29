@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { validarEmail } from "../../constantes";
 
@@ -11,10 +11,20 @@ export default function Login() {
   const [mensajeGeneral, setMensajeGeneral] = useState(null);
   const [enviado, setEnviado] = useState(false);
 
-  const { login } = useAuth();
+  const { login, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/dashboard";
+
+  if (loading) {
+    return (
+      <div style={{ padding: "2rem", textAlign: "center" }}>Cargando…</div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   async function validarYEnviar(e) {
     e.preventDefault();
