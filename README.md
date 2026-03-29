@@ -17,6 +17,7 @@ Proyecto fullstack: backend Flask (Python) + frontend React. Base de datos SQLit
 **Manual** — Backend (en una terminal, con el entorno ya creado e instalado):
 
 ```powershell
+Actualizar dependencias: pip install -r requirements.txt
 cd dieta_backend
 venv\Scripts\activate
 python app.py
@@ -36,6 +37,7 @@ python -m flask --app app db upgrade
 Para cargar datos de ejemplo:
 
 ```powershell
+Actualizar dependencias: npm install
 cd dieta_backend
 venv\Scripts\activate
 python seed_data.py
