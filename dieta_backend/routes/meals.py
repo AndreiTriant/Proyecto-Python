@@ -62,7 +62,6 @@ def create_meal():
     t = MealTemplate(
         user_id=uid,
         name=name,
-        meal_type=(data.get("meal_type") or "").strip(),
         notes=(data.get("notes") or "").strip(),
         calories=float(data.get("calories") or 0),
         protein=float(data.get("protein") or 0),
@@ -96,8 +95,6 @@ def update_meal(meal_id):
     data = request.get_json() or {}
     if "name" in data:
         t.name = (data.get("name") or "").strip() or t.name
-    if "meal_type" in data:
-        t.meal_type = (data.get("meal_type") or "").strip()
     if "notes" in data:
         t.notes = (data.get("notes") or "").strip()
     if "calories" in data:

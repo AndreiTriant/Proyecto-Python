@@ -187,8 +187,7 @@ Define `REACT_APP_API_URL` con la URL pública del API (**HTTPS**). En el backen
   - **POST** `/api/login`
   - **GET** `/api/me`
   - **POST** `/api/logout`
-  - `/api/food_items`
-  - `/api/meals` (requiere `user_id` via query param o header `X-User-Id`)
+  - `/api/meals` — plantillas de comida (`meal_templates`; requiere `user_id` vía query o header `X-User-Id`)
   - `/api/meals/<meal_id>`
   - `/api/diet_plans` (requiere `user_id`)
   - `/api/diet_plans/<plan_id>`

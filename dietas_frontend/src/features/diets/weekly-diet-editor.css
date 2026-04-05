@@ -199,22 +199,36 @@
   gap: 0.75rem;
 }
 
-.assigned-meal-card-head h4 {
-  margin: 0.25rem 0 0;
-  font-size: 1rem;
+.assigned-meal-title-tooltip {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.assigned-meal-order {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 42px;
-  padding: 0.2rem 0.45rem;
-  border-radius: 999px;
-  background: rgba(79, 70, 229, 0.09);
-  color: var(--primary);
-  font-size: 0.82rem;
-  font-weight: 700;
+.assigned-meal-card-title {
+  margin: 0;
+  font-size: 1rem;
+  cursor: help;
+  outline: none;
+}
+
+.assigned-meal-card-title:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.assigned-meal-nutrition-tooltip {
+  width: min(280px, 85vw);
+}
+
+.assigned-meal-nutrition-tooltip-body {
+  margin: 0.45rem 0 0;
+  line-height: 1.45;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .drag-handle {
@@ -235,22 +249,6 @@
   touch-action: none;
 }
 
-.assigned-meal-chip-row,
-.assigned-meal-footer,
-.meal-label-editor {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-wrap: wrap;
-}
-
-.meal-label-editor-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
 .assigned-meal-chip {
   display: inline-flex;
   align-items: center;
@@ -260,25 +258,9 @@
   font-weight: 600;
 }
 
-.assigned-meal-chip-label {
-  background: rgba(14, 165, 233, 0.1);
-  color: #0369a1;
-}
-
 .assigned-meal-chip-info {
   background: rgba(15, 23, 42, 0.06);
   color: var(--text);
-}
-
-.assigned-meal-link {
-  display: inline-flex;
-  align-items: center;
-  border: none;
-  background: transparent;
-  color: var(--primary);
-  cursor: pointer;
-  padding: 0;
-  font-weight: 600;
 }
 
 .modern-day-column .btn-primary,
@@ -301,22 +283,11 @@
   border-radius: 10px;
 }
 
-.assigned-meal-macros {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.assigned-meal-macros span {
-  padding: 0.35rem 0.65rem;
-  border-radius: 999px;
-  background: rgba(99, 102, 241, 0.08);
-  color: #4338ca;
-  font-size: 0.84rem;
-  font-weight: 600;
-}
-
 .assigned-meal-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
   justify-content: space-between;
 }
 

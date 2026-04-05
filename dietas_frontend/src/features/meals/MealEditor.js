@@ -99,7 +99,6 @@ export default function MealEditor({
 }) {
   const isNew = !meal?.id;
   const [name, setName] = useState(meal?.name || "");
-  const [mealType, setMealType] = useState(meal?.meal_type || "");
   const [notes, setNotes] = useState(meal?.notes || "");
   const [calories, setCalories] = useState(String(meal?.calories ?? 0));
   const [protein, setProtein] = useState(String(meal?.protein ?? 0));
@@ -119,7 +118,6 @@ export default function MealEditor({
 
   useEffect(() => {
     setName(meal?.name || "");
-    setMealType(meal?.meal_type || "");
     setNotes(meal?.notes || "");
     setCalories(String(meal?.calories ?? 0));
     setProtein(String(meal?.protein ?? 0));
@@ -287,7 +285,6 @@ export default function MealEditor({
 
       const payload = {
         name: name.trim(),
-        meal_type: mealType.trim(),
         notes: notes.trim(),
         calories: toNumericValue(calories),
         protein: toNumericValue(protein),
@@ -337,15 +334,6 @@ export default function MealEditor({
           <label>
             Nombre
             <input value={name} onChange={(e) => setName(e.target.value)} required />
-          </label>
-
-          <label>
-            Tipo (opcional)
-            <input
-              value={mealType}
-              onChange={(e) => setMealType(e.target.value)}
-              placeholder="desayuno, comida, cena, snack"
-            />
           </label>
         </div>
 

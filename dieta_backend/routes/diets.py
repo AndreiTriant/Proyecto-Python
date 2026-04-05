@@ -178,12 +178,10 @@ def add_meal_to_day(plan_id, weekday):
         for existing in diet_day.diet_day_meals:
             if (existing.order or 0) >= order:
                 existing.order = (existing.order or 0) + 1
-    label = (data.get("label") or "").strip()
     dm = DietDayMeal(
         diet_day_id=diet_day.id,
         meal_template_id=mt.id,
         order=order,
-        label=label,
     )
     db.session.add(dm)
     db.session.flush()
@@ -210,8 +208,6 @@ def update_day_meal(plan_id, weekday, day_meal_id):
     if day_meal.meal_template.user_id != uid:
         return jsonify({"ok": False, "error": "No autorizado."}), 403
     data = request.get_json() or {}
-    if "label" in data:
-        day_meal.label = (data.get("label") or "").strip()
     if "meal_template_id" in data:
         meal_template = db.session.get(MealTemplate, int(data.get("meal_template_id")))
         if not meal_template or meal_template.user_id != uid:
@@ -331,7 +327,6 @@ def copy_day_meals(plan_id, weekday):
                 diet_day_id=target_day.id,
                 meal_template_id=day_meal.meal_template_id,
                 order=index,
-                label=day_meal.label or "",
             )
         )
     db.session.flush()
@@ -371,7 +366,6 @@ def duplicate_diet(plan_id):
                     diet_day_id=new_day.id,
                     meal_template_id=dm.meal_template_id,
                     order=dm.order,
-                    label=dm.label or "",
                 )
             )
     db.session.commit()

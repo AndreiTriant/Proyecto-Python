@@ -74,13 +74,5 @@ def listar_usuarios():
     return jsonify([u.to_dict() for u in usuarios])
 
 
-@app.route("/api/food_items")
-def listar_food_items():
-    from flask import jsonify
-    from models import FoodItem
-    items = db.session.execute(db.select(FoodItem)).scalars().all()
-    return jsonify([i.to_dict() for i in items])
-
-
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=8080, use_reloader=False)

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -6,16 +6,26 @@ function formatNumber(value) {
   return Number(value || 0).toFixed(1);
 }
 
+function isNonZero(value) {
+  return Number(value || 0) !== 0;
+}
+
+/** Línea tipo "120 kcal · P 10 · G 5" omitiendo ceros. */
+function componentNutritionSummary(component) {
+  const bits = [];
+  if (isNonZero(component.calories)) bits.push(`${formatNumber(component.calories)} kcal`);
+  if (isNonZero(component.protein)) bits.push(`P ${formatNumber(component.protein)}`);
+  if (isNonZero(component.fat)) bits.push(`G ${formatNumber(component.fat)}`);
+  if (isNonZero(component.carbs)) bits.push(`C ${formatNumber(component.carbs)}`);
+  return bits.length > 0 ? bits.join(" · ") : null;
+}
+
 export default function SortableDayMealCard({
   assignedMeal,
   onDelete,
-  onSaveLabel,
   onEditMeal,
   busy = false,
 }) {
-  const [isEditingLabel, setIsEditingLabel] = useState(false);
-  const [labelValue, setLabelValue] = useState(assignedMeal.label || "");
-
   const {
     attributes,
     listeners,
@@ -35,10 +45,18 @@ export default function SortableDayMealCard({
     [assignedMeal.meal_template?.components]
   );
 
-  const saveLabel = () => {
-    onSaveLabel(assignedMeal.id, labelValue);
-    setIsEditingLabel(false);
-  };
+  const tmpl = assignedMeal.meal_template;
+
+  const nutritionTooltip = useMemo(() => {
+    if (!tmpl) return null;
+    const calLine = isNonZero(tmpl.calories) ? `${formatNumber(tmpl.calories)} kcal` : null;
+    const macroParts = [];
+    if (isNonZero(tmpl.protein)) macroParts.push(`Proteínas ${formatNumber(tmpl.protein)} g`);
+    if (isNonZero(tmpl.fat)) macroParts.push(`Grasas ${formatNumber(tmpl.fat)} g`);
+    if (isNonZero(tmpl.carbs)) macroParts.push(`Carbohidratos ${formatNumber(tmpl.carbs)} g`);
+    const macroLine = macroParts.length > 0 ? macroParts.join(" · ") : null;
+    return { calLine, macroLine };
+  }, [tmpl]);
 
   return (
     <article
@@ -47,9 +65,26 @@ export default function SortableDayMealCard({
       className={`assigned-meal-card ${isDragging ? "assigned-meal-card-dragging" : ""}`}
     >
       <div className="assigned-meal-card-head">
-        <div>
-          <span className="assigned-meal-order">#{(assignedMeal.order ?? 0) + 1}</span>
-          <h4>{assignedMeal.meal_template?.name || "Comida"}</h4>
+        <div className="tooltip-wrapper assigned-meal-title-tooltip">
+          <h4 className="assigned-meal-card-title" tabIndex={0}>
+            {tmpl?.name || "Comida"}
+          </h4>
+          <div className="modern-tooltip assigned-meal-nutrition-tooltip" role="tooltip">
+            <strong>Valores nutricionales</strong>
+            {tmpl ? (
+              nutritionTooltip.calLine || nutritionTooltip.macroLine ? (
+                <p className="assigned-meal-nutrition-tooltip-body">
+                  {nutritionTooltip.calLine}
+                  {nutritionTooltip.calLine && nutritionTooltip.macroLine ? <br /> : null}
+                  {nutritionTooltip.macroLine}
+                </p>
+              ) : (
+                <p className="assigned-meal-nutrition-tooltip-body">Sin valores registrados</p>
+              )
+            ) : (
+              <p className="assigned-meal-nutrition-tooltip-body">Sin datos</p>
+            )}
+          </div>
         </div>
         <button
           type="button"
@@ -60,48 +95,6 @@ export default function SortableDayMealCard({
         >
           Mover
         </button>
-      </div>
-
-      {isEditingLabel ? (
-        <div className="meal-label-editor">
-          <input
-            value={labelValue}
-            onChange={(event) => setLabelValue(event.target.value)}
-            placeholder="Desayuno, comida, cena..."
-          />
-          <div className="meal-label-editor-actions">
-            <button type="button" className="btn-sm" onClick={saveLabel} disabled={busy}>
-              Guardar
-            </button>
-            <button
-              type="button"
-              className="btn-sm"
-              onClick={() => {
-                setLabelValue(assignedMeal.label || "");
-                setIsEditingLabel(false);
-              }}
-              disabled={busy}
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="assigned-meal-chip-row">
-          <span className="assigned-meal-chip assigned-meal-chip-label">
-            {assignedMeal.label || "Sin etiqueta"}
-          </span>
-          <button type="button" className="assigned-meal-link" onClick={() => setIsEditingLabel(true)}>
-            Editar etiqueta
-          </button>
-        </div>
-      )}
-
-      <div className="assigned-meal-macros">
-        <span>{formatNumber(assignedMeal.meal_template?.calories)} kcal</span>
-        <span>P {formatNumber(assignedMeal.meal_template?.protein)}</span>
-        <span>G {formatNumber(assignedMeal.meal_template?.fat)}</span>
-        <span>C {formatNumber(assignedMeal.meal_template?.carbs)}</span>
       </div>
 
       <div className="assigned-meal-footer">
@@ -115,17 +108,17 @@ export default function SortableDayMealCard({
             <div className="modern-tooltip">
               <strong>Composición nutricional</strong>
               <ul>
-                {components.map((component) => (
-                  <li key={component.id || `${component.name}-${component.quantity}`}>
-                    <span>
-                      {component.name} · {component.quantity} {component.unit}
-                    </span>
-                    <span>
-                      {formatNumber(component.calories)} kcal | P {formatNumber(component.protein)} | G{" "}
-                      {formatNumber(component.fat)} | C {formatNumber(component.carbs)}
-                    </span>
-                  </li>
-                ))}
+                {components.map((component) => {
+                  const nutritionLine = componentNutritionSummary(component);
+                  return (
+                    <li key={component.id || `${component.name}-${component.quantity}`}>
+                      <span>
+                        {component.name} · {component.quantity} {component.unit}
+                      </span>
+                      <span>{nutritionLine ?? "Sin valores registrados"}</span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}

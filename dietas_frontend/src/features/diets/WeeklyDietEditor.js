@@ -144,7 +144,6 @@ export default function WeeklyDietEditor({ diet, userId, onUpdate }) {
           body: JSON.stringify({
             meal_template_id: meal.id,
             order,
-            label: meal.meal_type || "",
           }),
         }
       );
@@ -173,29 +172,6 @@ export default function WeeklyDietEditor({ diet, userId, onUpdate }) {
       setStatusMessage("Comida eliminada del día.");
     } catch (requestError) {
       setError(requestError.message || "No se pudo eliminar la comida.");
-    } finally {
-      setBusyAction("");
-    }
-  };
-
-  const updateMealLabel = async (weekday, mealId, label) => {
-    try {
-      clearFeedback();
-      setBusyAction(`label-${mealId}`);
-      const updatedDayMeal = await requestJson(
-        `${API_URL}/api/diets/${diet.id}/days/${weekday}/meals/${mealId}?user_id=${userId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ label }),
-        }
-      );
-      updateDayInState(weekday, (currentMeals) =>
-        currentMeals.map((meal) => (meal.id === mealId ? updatedDayMeal : meal))
-      );
-      setStatusMessage("Etiqueta actualizada.");
-    } catch (requestError) {
-      setError(requestError.message || "No se pudo actualizar la etiqueta.");
     } finally {
       setBusyAction("");
     }
@@ -335,12 +311,11 @@ export default function WeeklyDietEditor({ diet, userId, onUpdate }) {
               setCopyTargetWeekday("");
             }}
             onDeleteMeal={deleteMealFromDay}
-            onUpdateMealLabel={updateMealLabel}
             onEditAssignedMeal={(weekday, assignedMeal) =>
               setEditDayMealContext({ weekday, assignedMeal })
             }
             onReorderMeals={reorderMeals}
-            busy={busyAction.startsWith("delete-") || busyAction.startsWith("label-")}
+            busy={busyAction.startsWith("delete-")}
           />
         ))}
       </div>
