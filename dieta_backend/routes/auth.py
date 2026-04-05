@@ -51,7 +51,7 @@ def registro():
     nuevo = models.Usuario(usuario=usuario, email=email, password_hash=password_hash)
     db.session.add(nuevo)
     db.session.commit()
-    # Iniciar sesión en cookie HttpOnly (misma política que login).
+    # Iniciar sesión en cookie HttpOnly (misma política que login). permanent + PERMANENT_SESSION_LIFETIME en app.
     session.clear()
     session["user_id"] = nuevo.id
     session.permanent = True

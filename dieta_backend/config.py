@@ -17,4 +17,5 @@ SESSION_COOKIE_SECURE = os.environ.get("FLASK_SESSION_COOKIE_SECURE", "").lower(
 )
 # Por defecto Lax (recomendado con proxy del front o mismo dominio). None + Secure para API en otro dominio (HTTPS).
 SESSION_COOKIE_SAMESITE = os.environ.get("FLASK_SESSION_COOKIE_SAMESITE", "Lax")
-SESSION_LIFETIME_DAYS = int(os.environ.get("FLASK_SESSION_LIFETIME_DAYS", "14"))
+# Cookie de sesión permanente (~6 meses). Sobrescribible con FLASK_SESSION_LIFETIME_DAYS.
+SESSION_LIFETIME_DAYS = int(os.environ.get("FLASK_SESSION_LIFETIME_DAYS", "183"))
