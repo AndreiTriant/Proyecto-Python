@@ -267,6 +267,26 @@ body {
   box-sizing: border-box;
 }
 
+/* Contenedor del editor de comida en modal (sin padding) */
+.modal-content.modal-meal-shell {
+  padding: 0;
+  max-width: min(99vw, 704px);
+  width: 100%;
+  max-height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  box-shadow:
+    0 10px 25px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+.modal-content-wide.modal-meal-shell {
+  max-width: min(99vw, 704px);
+  width: 100%;
+}
+
 .meal-log-row {
   display: flex;
   gap: 0.5rem;

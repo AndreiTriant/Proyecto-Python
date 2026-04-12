@@ -322,26 +322,7 @@ export default function WeeklyDietEditor({ diet, userId, onUpdate }) {
 
       {editDayMealContext?.assignedMeal?.meal_template?.id && (
         <div className="modal-overlay">
-          <div className="modal-content modal-content-wide">
-            <div className="modal-sheet-head">
-              <div>
-                <p className="weekly-editor-kicker">
-                  {editDayMealContext.weekday
-                    ? editDayMealContext.weekday.charAt(0).toUpperCase() +
-                      editDayMealContext.weekday.slice(1)
-                    : ""}{" "}
-                  · comida del plan
-                </p>
-                <h3>Editar comida</h3>
-                <p className="text-muted">
-                  Los cambios aplican a esta plantilla: se verán en todos los días de esta dieta (y en la biblioteca)
-                  que usen la misma comida.
-                </p>
-              </div>
-              <button type="button" className="btn-sm" onClick={() => setEditDayMealContext(null)}>
-                Cerrar
-              </button>
-            </div>
+          <div className="modal-content modal-content-wide modal-meal-shell">
             <MealEditor
               key={editDayMealContext.assignedMeal.meal_template.id}
               meal={editDayMealContext.assignedMeal.meal_template}
@@ -350,6 +331,13 @@ export default function WeeklyDietEditor({ diet, userId, onUpdate }) {
               onCancel={() => setEditDayMealContext(null)}
               saveButtonLabel="Guardar cambios"
               compact
+              modalSubtitle={
+                editDayMealContext.weekday
+                  ? `${editDayMealContext.weekday.toUpperCase()} - COMIDA DEL PLAN`
+                  : ""
+              }
+              modalTitle="Editar comida"
+              modalInfoText="Los cambios aplicados a esta plantilla se verán reflejados en todos los días de esta dieta y en tu biblioteca personal."
             />
           </div>
         </div>
@@ -357,22 +345,16 @@ export default function WeeklyDietEditor({ diet, userId, onUpdate }) {
 
       {createMealWeekday && (
         <div className="modal-overlay">
-          <div className="modal-content modal-content-wide">
-            <div className="modal-sheet-head">
-              <div>
-                <p className="weekly-editor-kicker">Nueva comida para {createMealWeekday}</p>
-                <h3>Crear y añadir a la dieta</h3>
-              </div>
-              <button type="button" className="btn-sm" onClick={() => setCreateMealWeekday("")}>
-                Cerrar
-              </button>
-            </div>
+          <div className="modal-content modal-content-wide modal-meal-shell">
             <MealEditor
               userId={userId}
               onSaved={handleMealCreated}
               onCancel={() => setCreateMealWeekday("")}
               saveButtonLabel="Guardar y añadir"
               compact
+              modalSubtitle={`NUEVA COMIDA PARA ${createMealWeekday.toUpperCase()}`}
+              modalTitle="Crear y añadir a la dieta"
+              modalInfoText=""
             />
           </div>
         </div>
