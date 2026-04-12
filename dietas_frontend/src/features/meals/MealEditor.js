@@ -99,6 +99,7 @@ export default function MealEditor({
   modalTitle = "",
   modalSubtitle = "",
   modalInfoText = "",
+  modalCloseLabel = null,
 }) {
   const isNew = !meal?.id;
   const [name, setName] = useState(meal?.name || "");
@@ -554,8 +555,13 @@ export default function MealEditor({
               ) : null}
               <h2>{titleHeading}</h2>
             </div>
-            <button type="button" className="meal-modal-close" aria-label="Cerrar" onClick={onCancel}>
-              ✕
+            <button
+              type="button"
+              className={`meal-modal-close ${modalCloseLabel ? "meal-modal-close--wide" : ""}`}
+              aria-label={modalCloseLabel ? "Volver" : "Cerrar"}
+              onClick={onCancel}
+            >
+              {modalCloseLabel ?? "✕"}
             </button>
           </header>
 

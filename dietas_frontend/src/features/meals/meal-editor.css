@@ -422,6 +422,19 @@
   padding: 0.25rem;
 }
 
+.meal-modal-close--wide {
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.4rem 0.65rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.meal-modal-close--wide:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--meal-text-main);
+}
+
 .meal-modal-body {
   padding: 1.5rem 2rem;
   overflow-y: auto;

@@ -32,27 +32,30 @@ export default function ComidaEditar() {
     return (
       <div className="card">
         <p>Comida no encontrada.</p>
-        <button type="button" onClick={() => navigate("/comidas")}>
-          Volver a comidas
+        <button type="button" className="btn-ghost" onClick={() => navigate("/comidas")}>
+          ← Volver a comidas
         </button>
       </div>
     );
   }
 
   return (
-    <div className="editor-page">
-      <header className="page-header">
-        <h1>{meal.name || "Editar comida"}</h1>
-        <button type="button" onClick={() => navigate("/comidas")}>
-          Volver
-        </button>
-      </header>
-      <MealEditor
-        meal={meal}
-        userId={user.id}
-        onSaved={() => navigate("/comidas")}
-        onCancel={() => navigate("/comidas")}
-      />
+    <div className="editor-page meal-editor-page">
+      <div className="modal-content modal-content-wide modal-meal-shell meal-editor-route-shell">
+        <MealEditor
+          key={meal.id}
+          meal={meal}
+          userId={user.id}
+          onSaved={() => navigate("/comidas")}
+          onCancel={() => navigate("/comidas")}
+          saveButtonLabel="Guardar cambios"
+          compact
+          modalSubtitle="BIBLIOTECA DE COMIDAS"
+          modalTitle={meal.name?.trim() ? meal.name : "Editar comida"}
+          modalInfoText="Los cambios se guardan en tu biblioteca. Las dietas que usen esta comida mostrarán los valores actualizados."
+          modalCloseLabel="← Volver"
+        />
+      </div>
     </div>
   );
 }
