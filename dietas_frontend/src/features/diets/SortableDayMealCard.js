@@ -49,13 +49,14 @@ export default function SortableDayMealCard({
 
   const nutritionTooltip = useMemo(() => {
     if (!tmpl) return null;
+    const qtyLine = `${formatNumber(tmpl.quantity ?? 1)} ${tmpl.unit || "porción"}`;
     const calLine = isNonZero(tmpl.calories) ? `${formatNumber(tmpl.calories)} kcal` : null;
     const macroParts = [];
     if (isNonZero(tmpl.protein)) macroParts.push(`Proteínas ${formatNumber(tmpl.protein)} g`);
     if (isNonZero(tmpl.fat)) macroParts.push(`Grasas ${formatNumber(tmpl.fat)} g`);
     if (isNonZero(tmpl.carbs)) macroParts.push(`Carbohidratos ${formatNumber(tmpl.carbs)} g`);
     const macroLine = macroParts.length > 0 ? macroParts.join(" · ") : null;
-    return { calLine, macroLine };
+    return { qtyLine, calLine, macroLine };
   }, [tmpl]);
 
   return (
@@ -72,8 +73,16 @@ export default function SortableDayMealCard({
           <div className="modern-tooltip assigned-meal-nutrition-tooltip" role="tooltip">
             <strong>Valores nutricionales</strong>
             {tmpl ? (
-              nutritionTooltip.calLine || nutritionTooltip.macroLine ? (
+              nutritionTooltip.qtyLine ||
+              nutritionTooltip.calLine ||
+              nutritionTooltip.macroLine ? (
                 <p className="assigned-meal-nutrition-tooltip-body">
+                  {nutritionTooltip.qtyLine ? (
+                    <>
+                      Cantidad: {nutritionTooltip.qtyLine}
+                      <br />
+                    </>
+                  ) : null}
                   {nutritionTooltip.calLine}
                   {nutritionTooltip.calLine && nutritionTooltip.macroLine ? <br /> : null}
                   {nutritionTooltip.macroLine}

@@ -22,9 +22,16 @@ const OPTIONAL_COMPONENT_FIELDS = [
 
 const COMPONENT_UNIT_OPTIONS = ["g", "kg", "mg", "ml", "l", "oz", "lb", "cda"];
 
+const MEAL_TEMPLATE_UNIT_OPTIONS = ["porción", "ración", ...COMPONENT_UNIT_OPTIONS];
+
 function normalizeComponentUnit(unit) {
   const u = (unit || "").trim() || "g";
   return COMPONENT_UNIT_OPTIONS.includes(u) ? u : "g";
+}
+
+function normalizeMealTemplateUnit(unit) {
+  const u = (unit || "").trim() || "porción";
+  return MEAL_TEMPLATE_UNIT_OPTIONS.includes(u) ? u : "porción";
 }
 
 function toNumericValue(value) {
@@ -108,6 +115,8 @@ export default function MealEditor({
   const [protein, setProtein] = useState(String(meal?.protein ?? 0));
   const [fat, setFat] = useState(String(meal?.fat ?? 0));
   const [carbs, setCarbs] = useState(String(meal?.carbs ?? 0));
+  const [mealQuantity, setMealQuantity] = useState(String(meal?.quantity ?? 1));
+  const [mealUnit, setMealUnit] = useState(normalizeMealTemplateUnit(meal?.unit));
   const [components, setComponents] = useState((meal?.components || []).map(createDraftComponent));
   const [removedComponentIds, setRemovedComponentIds] = useState([]);
   const [componentDraft, setComponentDraft] = useState({ ...EMPTY_COMPONENT });
@@ -127,6 +136,8 @@ export default function MealEditor({
     setProtein(String(meal?.protein ?? 0));
     setFat(String(meal?.fat ?? 0));
     setCarbs(String(meal?.carbs ?? 0));
+    setMealQuantity(String(meal?.quantity ?? 1));
+    setMealUnit(normalizeMealTemplateUnit(meal?.unit));
     setComponents((meal?.components || []).map(createDraftComponent));
     setRemovedComponentIds([]);
     setComponentDraft({ ...EMPTY_COMPONENT });
@@ -287,9 +298,12 @@ export default function MealEditor({
       setError("");
       setSuccess("");
 
+      const q = toNumericValue(mealQuantity);
       const payload = {
         name: name.trim(),
         notes: notes.trim(),
+        quantity: q > 0 ? q : 1,
+        unit: normalizeMealTemplateUnit(mealUnit),
         calories: toNumericValue(calories),
         protein: toNumericValue(protein),
         fat: toNumericValue(fat),
@@ -327,7 +341,8 @@ export default function MealEditor({
   const defaultInfoText =
     "Los cambios aplicados a esta plantilla se verán reflejados en todos los días de esta dieta y en tu biblioteca personal.";
 
-  const totalSummary = `${toNumericValue(calories).toFixed(0)} kcal | ${toNumericValue(protein).toFixed(0)}P | ${toNumericValue(fat).toFixed(0)}G | ${toNumericValue(carbs).toFixed(0)}C`;
+  const qtyLabel = `${formatDecimal(mealQuantity)} ${normalizeMealTemplateUnit(mealUnit)}`;
+  const totalSummary = `${qtyLabel} · ${toNumericValue(calories).toFixed(0)} kcal | ${toNumericValue(protein).toFixed(0)}P | ${toNumericValue(fat).toFixed(0)}G | ${toNumericValue(carbs).toFixed(0)}C`;
 
   const toggleComponentBuilder = () => {
     setShowComponentBuilder((prev) => !prev);
@@ -597,6 +612,33 @@ export default function MealEditor({
                   placeholder="Ej.: Ideal para post-entreno o cena ligera…"
                 />
               </div>
+              <div className="meal-form-group">
+                <span className="meal-form-label-text">Cantidad de la comida</span>
+                <div className="quantity-field-row">
+                  <input
+                    id="meal-template-qty-compact"
+                    className="quantity-input-part"
+                    type="number"
+                    step="any"
+                    min="0.01"
+                    value={mealQuantity}
+                    onChange={(e) => setMealQuantity(e.target.value)}
+                    aria-label="Cantidad"
+                  />
+                  <select
+                    className="quantity-unit-part"
+                    aria-label="Unidad de la comida"
+                    value={mealUnit}
+                    onChange={(e) => setMealUnit(e.target.value)}
+                  >
+                    {MEAL_TEMPLATE_UNIT_OPTIONS.map((unitOption) => (
+                      <option key={unitOption} value={unitOption}>
+                        {unitOption}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </section>
 
             <section className="meal-nutrition-section">
@@ -716,6 +758,29 @@ export default function MealEditor({
             placeholder="Ejemplo: ideal para post entreno o cena ligera"
           />
         </label>
+
+        <div className="meal-editor-grid meal-editor-grid--meal-qty">
+          <label>
+            Cantidad de la comida
+            <input
+              type="number"
+              step="any"
+              min="0.01"
+              value={mealQuantity}
+              onChange={(e) => setMealQuantity(e.target.value)}
+            />
+          </label>
+          <label>
+            Unidad
+            <select value={mealUnit} onChange={(e) => setMealUnit(e.target.value)}>
+              {MEAL_TEMPLATE_UNIT_OPTIONS.map((unitOption) => (
+                <option key={unitOption} value={unitOption}>
+                  {unitOption}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
         <section className="meal-editor-section">
           <div className="section-heading">

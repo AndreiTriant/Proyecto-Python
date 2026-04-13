@@ -602,16 +602,33 @@ a.btn-primary:focus-visible,
 }
 
 .checkin-meals-block .meal-log-row {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.4rem;
   align-items: stretch;
 }
 
-.checkin-meals-block .meal-log-row input {
+.checkin-meals-block .meal-log-row > input {
+  width: 100%;
+  margin-top: 0;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--meal-border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--meal-text-main);
+  box-sizing: border-box;
+}
+
+.checkin-meals-block .meal-log-row-macros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.checkin-meals-block .meal-log-row-macros input {
   flex: 1;
-  min-width: 0;
-  width: auto;
+  min-width: 4.25rem;
   margin-top: 0;
   padding: 0.65rem 0.85rem;
   border: 1px solid var(--meal-border);

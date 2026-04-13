@@ -1,9 +1,9 @@
-from datetime import date as date_type, datetime
+from datetime import date as date_type
 
 from flask import Blueprint, jsonify, request
 
 from extensions import db
-from models import DailyCheckin, DailyCheckinMealLog, CheckinStatus, WeekDay
+from models import DietDayStatusEntry, MealLogEntry, CheckinStatus, WeekDay
 from utils import get_user_id_from_request
 
 bp = Blueprint("tracking", __name__, url_prefix="/api")
@@ -26,6 +26,69 @@ def _parse_date(s):
         return None
 
 
+def _float_field(raw, default=0.0):
+    if raw is None or raw == "":
+        return default
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return default
+
+
+def _meal_logs_for_day(uid, dt):
+    return db.session.execute(
+        db.select(MealLogEntry)
+        .where(MealLogEntry.user_id == uid, MealLogEntry.date == dt)
+        .order_by(MealLogEntry.meal_order, MealLogEntry.id)
+    ).scalars().all()
+
+
+def _replace_meal_logs_for_day(uid, dt, payload):
+    for row in db.session.execute(
+        db.select(MealLogEntry).where(
+            MealLogEntry.user_id == uid,
+            MealLogEntry.date == dt,
+        )
+    ).scalars().all():
+        db.session.delete(row)
+    order = 0
+    for log in payload or []:
+        name = (log.get("name") or "").strip()
+        if not name:
+            continue
+        cal = _float_field(log.get("calories"))
+        if cal == 0.0:
+            cal = _float_field(log.get("calories_approx"))
+        tid = log.get("meal_template_id")
+        if tid is not None and tid != "":
+            try:
+                tid = int(tid)
+            except (TypeError, ValueError):
+                tid = None
+        else:
+            tid = None
+        mo = log.get("meal_order")
+        try:
+            meal_order = int(mo) if mo is not None and mo != "" else order
+        except (TypeError, ValueError):
+            meal_order = order
+        db.session.add(
+            MealLogEntry(
+                user_id=uid,
+                date=dt,
+                name=name,
+                calories=cal,
+                protein=_float_field(log.get("protein")),
+                fat=_float_field(log.get("fat")),
+                carbs=_float_field(log.get("carbs")),
+                meal_template_id=tid,
+                meal_order=meal_order,
+                notes=(log.get("notes") or "").strip()[:500],
+            )
+        )
+        order += 1
+
+
 @bp.route("/checkins")
 def list_checkins():
     uid, err = _get_uid()
@@ -35,16 +98,16 @@ def list_checkins():
     to_str = request.args.get("to")
     from_d = _parse_date(from_str)
     to_d = _parse_date(to_str)
-    stmt = db.select(DailyCheckin).where(DailyCheckin.user_id == uid)
+    stmt = db.select(DietDayStatusEntry).where(DietDayStatusEntry.user_id == uid)
     if from_d:
-        stmt = stmt.where(DailyCheckin.date >= from_d)
+        stmt = stmt.where(DietDayStatusEntry.date >= from_d)
     if to_d:
-        stmt = stmt.where(DailyCheckin.date <= to_d)
+        stmt = stmt.where(DietDayStatusEntry.date <= to_d)
     checkins = db.session.execute(stmt).scalars().all()
     out = []
     for c in checkins:
         d = c.to_dict()
-        d["meal_logs"] = [m.to_dict() for m in c.meal_logs]
+        d["meal_logs"] = [m.to_dict() for m in _meal_logs_for_day(uid, c.date)]
         out.append(d)
     return jsonify(out)
 
@@ -65,9 +128,9 @@ def create_checkin():
     except ValueError:
         return jsonify({"ok": False, "error": "status inválido."}), 400
     existing = db.session.execute(
-        db.select(DailyCheckin).where(
-            DailyCheckin.user_id == uid,
-            DailyCheckin.date == dt,
+        db.select(DietDayStatusEntry).where(
+            DietDayStatusEntry.user_id == uid,
+            DietDayStatusEntry.date == dt,
         )
     ).scalar_one_or_none()
     if existing:
@@ -76,23 +139,12 @@ def create_checkin():
         wdu = data.get("weekday_used")
         existing.weekday_used = WeekDay(wdu) if wdu else None
         existing.notes = (data.get("notes") or "").strip()
-        for log in existing.meal_logs:
-            db.session.delete(log)
-        for log in (data.get("meal_logs") or []):
-            name = (log.get("name") or "").strip()
-            if name:
-                db.session.add(
-                    DailyCheckinMealLog(
-                        daily_checkin_id=existing.id,
-                        name=name,
-                        calories_approx=log.get("calories_approx"),
-                    )
-                )
+        _replace_meal_logs_for_day(uid, dt, data.get("meal_logs"))
         db.session.commit()
         out = existing.to_dict()
-        out["meal_logs"] = [m.to_dict() for m in existing.meal_logs]
+        out["meal_logs"] = [m.to_dict() for m in _meal_logs_for_day(uid, dt)]
         return jsonify(out)
-    checkin = DailyCheckin(
+    entry = DietDayStatusEntry(
         user_id=uid,
         date=dt,
         status=status,
@@ -100,21 +152,12 @@ def create_checkin():
         weekday_used=WeekDay(data["weekday_used"]) if data.get("weekday_used") else None,
         notes=(data.get("notes") or "").strip(),
     )
-    db.session.add(checkin)
+    db.session.add(entry)
     db.session.flush()
-    for log in (data.get("meal_logs") or []):
-        name = (log.get("name") or "").strip()
-        if name:
-            db.session.add(
-                DailyCheckinMealLog(
-                    daily_checkin_id=checkin.id,
-                    name=name,
-                    calories_approx=log.get("calories_approx"),
-                )
-            )
+    _replace_meal_logs_for_day(uid, dt, data.get("meal_logs"))
     db.session.commit()
-    out = checkin.to_dict()
-    out["meal_logs"] = [m.to_dict() for m in checkin.meal_logs]
+    out = entry.to_dict()
+    out["meal_logs"] = [m.to_dict() for m in _meal_logs_for_day(uid, dt)]
     return jsonify(out), 201
 
 
@@ -127,15 +170,15 @@ def get_checkin(date_str):
     if not dt:
         return jsonify({"ok": False, "error": "Fecha inválida."}), 400
     c = db.session.execute(
-        db.select(DailyCheckin).where(
-            DailyCheckin.user_id == uid,
-            DailyCheckin.date == dt,
+        db.select(DietDayStatusEntry).where(
+            DietDayStatusEntry.user_id == uid,
+            DietDayStatusEntry.date == dt,
         )
     ).scalar_one_or_none()
     if not c:
         return jsonify({"ok": False, "error": "No hay registro para esa fecha."}), 404
     out = c.to_dict()
-    out["meal_logs"] = [m.to_dict() for m in c.meal_logs]
+    out["meal_logs"] = [m.to_dict() for m in _meal_logs_for_day(uid, dt)]
     return jsonify(out)
 
 
@@ -154,9 +197,9 @@ def update_checkin(date_str):
     except ValueError:
         return jsonify({"ok": False, "error": "status inválido."}), 400
     c = db.session.execute(
-        db.select(DailyCheckin).where(
-            DailyCheckin.user_id == uid,
-            DailyCheckin.date == dt,
+        db.select(DietDayStatusEntry).where(
+            DietDayStatusEntry.user_id == uid,
+            DietDayStatusEntry.date == dt,
         )
     ).scalar_one_or_none()
     if not c:
@@ -166,19 +209,8 @@ def update_checkin(date_str):
     wdu = data.get("weekday_used")
     c.weekday_used = WeekDay(wdu) if wdu else None
     c.notes = (data.get("notes") or "").strip()
-    for log in c.meal_logs:
-        db.session.delete(log)
-    for log in (data.get("meal_logs") or []):
-        name = (log.get("name") or "").strip()
-        if name:
-            db.session.add(
-                DailyCheckinMealLog(
-                    daily_checkin_id=c.id,
-                    name=name,
-                    calories_approx=log.get("calories_approx"),
-                )
-            )
+    _replace_meal_logs_for_day(uid, dt, data.get("meal_logs"))
     db.session.commit()
     out = c.to_dict()
-    out["meal_logs"] = [m.to_dict() for m in c.meal_logs]
+    out["meal_logs"] = [m.to_dict() for m in _meal_logs_for_day(uid, dt)]
     return jsonify(out)

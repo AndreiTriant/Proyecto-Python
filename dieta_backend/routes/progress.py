@@ -3,7 +3,7 @@ from datetime import date as date_type, timedelta
 from flask import Blueprint, jsonify, request
 
 from extensions import db
-from models import WeightEntry, DailyCheckin, DietPlan
+from models import WeightEntry, DietDayStatusEntry, DietPlan
 from utils import get_user_id_from_request
 
 bp = Blueprint("progress", __name__, url_prefix="/api")
@@ -111,10 +111,10 @@ def progress_overview():
     if not to_d:
         to_d = date_type.today()
     checkins = db.session.execute(
-        db.select(DailyCheckin).where(
-            DailyCheckin.user_id == uid,
-            DailyCheckin.date >= from_d,
-            DailyCheckin.date <= to_d,
+        db.select(DietDayStatusEntry).where(
+            DietDayStatusEntry.user_id == uid,
+            DietDayStatusEntry.date >= from_d,
+            DietDayStatusEntry.date <= to_d,
         )
     ).scalars().all()
     weights = db.session.execute(
@@ -158,10 +158,10 @@ def dashboard():
         )
     ).scalar_one_or_none()
     checkins = db.session.execute(
-        db.select(DailyCheckin).where(
-            DailyCheckin.user_id == uid,
-            DailyCheckin.date >= from_d,
-            DailyCheckin.date <= to_d,
+        db.select(DietDayStatusEntry).where(
+            DietDayStatusEntry.user_id == uid,
+            DietDayStatusEntry.date >= from_d,
+            DietDayStatusEntry.date <= to_d,
         )
     ).scalars().all()
     weights = db.session.execute(

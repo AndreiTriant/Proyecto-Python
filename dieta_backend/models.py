@@ -28,7 +28,12 @@ class Usuario(db.Model):
     # Relaciones
     diet_plans = db.relationship("DietPlan", back_populates="user", lazy="select")
     meal_templates = db.relationship("MealTemplate", back_populates="user", lazy="select")
-    daily_checkins = db.relationship("DailyCheckin", back_populates="user", lazy="select")
+    diet_day_status_entries = db.relationship(
+        "DietDayStatusEntry", back_populates="user", lazy="select"
+    )
+    meal_log_entries = db.relationship(
+        "MealLogEntry", back_populates="user", lazy="select"
+    )
     weight_entries = db.relationship("WeightEntry", back_populates="user", lazy="select")
 
     def to_dict(self):
@@ -78,7 +83,8 @@ class WeekDay(enum.Enum):
 class MealTemplate(db.Model):
     """
     Comida reutilizable (plantilla), no anclada a una fecha.
-    Ejemplo: "Arroz con pollo". Tiene totales nutricionales y componentes.
+    Ejemplo: "Arroz con pollo". quantity + unit describen la porción del plato (p. ej. 1 porción, 350 g);
+    los macros totales son independientes (no se escalan por quantity). Opcionalmente tiene componentes.
     """
     __tablename__ = "meal_templates"
 
@@ -87,6 +93,9 @@ class MealTemplate(db.Model):
 
     name = db.Column(db.String(150), nullable=False)
     notes = db.Column(db.String(500), default="")
+
+    quantity = db.Column(db.Float, nullable=False, default=1.0)
+    unit = db.Column(db.String(10), nullable=False, default="porción")
 
     calories = db.Column(db.Float, default=0.0)
     protein = db.Column(db.Float, default=0.0)
@@ -102,6 +111,9 @@ class MealTemplate(db.Model):
     diet_day_meals = db.relationship(
         "DietDayMeal", back_populates="meal_template", lazy="select"
     )
+    meal_log_entries = db.relationship(
+        "MealLogEntry", back_populates="meal_template", lazy="select"
+    )
 
     def to_dict(self):
         return {
@@ -109,6 +121,8 @@ class MealTemplate(db.Model):
             "user_id": self.user_id,
             "name": self.name,
             "notes": self.notes,
+            "quantity": self.quantity,
+            "unit": self.unit,
             "calories": self.calories,
             "protein": self.protein,
             "fat": self.fat,
@@ -222,9 +236,9 @@ class CheckinStatus(enum.Enum):
     not_followed = "not_followed"           # dieta no seguida
 
 
-class DailyCheckin(db.Model):
-    """Registro diario de adherencia a la dieta (fecha calendario real)."""
-    __tablename__ = "daily_checkins"
+class DietDayStatusEntry(db.Model):
+    """Estado de adherencia al plan para un día concreto (calendario real)."""
+    __tablename__ = "diet_day_status_entries"
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
@@ -237,13 +251,7 @@ class DailyCheckin(db.Model):
 
     __table_args__ = (db.UniqueConstraint("user_id", "date", name="uq_user_date"),)
 
-    user = db.relationship("Usuario", back_populates="daily_checkins", lazy="select")
-    meal_logs = db.relationship(
-        "DailyCheckinMealLog",
-        back_populates="daily_checkin",
-        lazy="select",
-        cascade="all, delete-orphan",
-    )
+    user = db.relationship("Usuario", back_populates="diet_day_status_entries", lazy="select")
 
     def to_dict(self):
         return {
@@ -257,28 +265,49 @@ class DailyCheckin(db.Model):
         }
 
 
-class DailyCheckinMealLog(db.Model):
-    """Comida libre registrada cuando el usuario no siguió la dieta."""
-    __tablename__ = "daily_checkin_meal_logs"
-
-    id = db.Column(db.Integer, primary_key=True)
-    daily_checkin_id = db.Column(
-        db.Integer, db.ForeignKey("daily_checkins.id"), nullable=False
+class MealLogEntry(db.Model):
+    """Comida registrada por el usuario en un día (macros en el momento del guardado)."""
+    __tablename__ = "meal_log_entries"
+    __table_args__ = (
+        db.Index("ix_meal_log_entries_user_date", "user_id", "date"),
     )
 
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
+    date = db.Column(db.Date, nullable=False)
     name = db.Column(db.String(200), nullable=False)
-    calories_approx = db.Column(db.Float, nullable=True)
 
-    daily_checkin = db.relationship(
-        "DailyCheckin", back_populates="meal_logs", lazy="select"
+    calories = db.Column(db.Float, nullable=False, default=0.0)
+    protein = db.Column(db.Float, nullable=False, default=0.0)
+    fat = db.Column(db.Float, nullable=False, default=0.0)
+    carbs = db.Column(db.Float, nullable=False, default=0.0)
+
+    meal_template_id = db.Column(
+        db.Integer, db.ForeignKey("meal_templates.id"), nullable=True
+    )
+    meal_order = db.Column(db.Integer, nullable=False, default=0)
+    notes = db.Column(db.String(500), default="")
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = db.relationship("Usuario", back_populates="meal_log_entries", lazy="select")
+    meal_template = db.relationship(
+        "MealTemplate", back_populates="meal_log_entries", lazy="select"
     )
 
     def to_dict(self):
         return {
             "id": self.id,
-            "daily_checkin_id": self.daily_checkin_id,
+            "user_id": self.user_id,
+            "date": self.date.isoformat(),
             "name": self.name,
-            "calories_approx": self.calories_approx,
+            "calories": self.calories,
+            "protein": self.protein,
+            "fat": self.fat,
+            "carbs": self.carbs,
+            "meal_template_id": self.meal_template_id,
+            "meal_order": self.meal_order,
+            "notes": self.notes,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
 

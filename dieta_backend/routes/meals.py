@@ -14,6 +14,21 @@ def _get_uid():
     return uid, None
 
 
+def _meal_quantity_value(raw):
+    if raw is None or raw == "":
+        return 1.0
+    try:
+        v = float(raw)
+        return v if v > 0 else 1.0
+    except (TypeError, ValueError):
+        return 1.0
+
+
+def _meal_unit_value(raw):
+    u = (raw or "porción").strip()[:10]
+    return u or "porción"
+
+
 def _serialize_meal(template, include_components=True):
     out = template.to_dict()
     components = list(template.components)
@@ -63,6 +78,8 @@ def create_meal():
         user_id=uid,
         name=name,
         notes=(data.get("notes") or "").strip(),
+        quantity=_meal_quantity_value(data.get("quantity")),
+        unit=_meal_unit_value(data.get("unit")),
         calories=float(data.get("calories") or 0),
         protein=float(data.get("protein") or 0),
         fat=float(data.get("fat") or 0),
@@ -97,6 +114,10 @@ def update_meal(meal_id):
         t.name = (data.get("name") or "").strip() or t.name
     if "notes" in data:
         t.notes = (data.get("notes") or "").strip()
+    if "quantity" in data:
+        t.quantity = _meal_quantity_value(data.get("quantity"))
+    if "unit" in data:
+        t.unit = _meal_unit_value(data.get("unit"))
     if "calories" in data:
         t.calories = float(data.get("calories", 0))
     if "protein" in data:
