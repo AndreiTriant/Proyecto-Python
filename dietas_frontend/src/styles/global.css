@@ -1,11 +1,13 @@
-/* Variables y base */
+/* Variables y base (alineados con modales / editor de comidas) */
 :root {
   --bg-main: #f7f8fa;
   --surface: #ffffff;
   --text: #1f2937;
   --text-muted: #6b7280;
-  --primary: #4f46e5;
-  --primary-soft: #eef2ff;
+  --primary: #5d5fef;
+  --primary-hover: #4f52e8;
+  --primary-soft: #eef0ff;
+  --primary-ring: rgba(93, 95, 239, 0.35);
   --success: #16a34a;
   --warning: #d97706;
   --error: #dc2626;
@@ -67,37 +69,120 @@ body {
   flex: 1 1 100%;
 }
 
-.btn-primary {
-  display: inline-block;
-  padding: 0.5rem 1rem;
+/* Botones globales */
+.btn-primary,
+a.btn-primary,
+.auth-page button[type="submit"],
+.form-actions button[type="submit"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
   background: var(--primary);
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 6px;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
   width: auto;
   max-width: 100%;
-  line-height: 1.15;
+  line-height: 1.2;
   white-space: nowrap;
+  font-family: inherit;
+  transition: background 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
-.btn-primary:hover {
-  opacity: 0.9;
+.btn-primary:hover,
+a.btn-primary:hover,
+.auth-page button[type="submit"]:hover:not(:disabled),
+.form-actions button[type="submit"]:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.btn-primary:disabled,
+a.btn-primary[aria-disabled="true"],
+.auth-page button[type="submit"]:disabled,
+.form-actions button[type="submit"]:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn-primary:focus-visible,
+a.btn-primary:focus-visible,
+.auth-page button[type="submit"]:focus-visible,
+.form-actions button[type="submit"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-ring);
 }
 
 .btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
   border: 1px solid var(--border);
-  border-radius: 4px;
-  background: white;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
   cursor: pointer;
   width: auto;
   max-width: 100%;
-  line-height: 1.15;
+  line-height: 1.2;
   white-space: nowrap;
+  font-family: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-sm:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.btn-sm:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-ring);
+}
+
+.btn-sm:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn-ghost,
+.form-actions button[type="button"]:not(.btn-sm):not(.btn-primary),
+.modal-actions button[type="button"]:not(.btn-sm):not(.btn-primary) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.2;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-ghost:hover,
+.form-actions button[type="button"]:not(.btn-sm):not(.btn-primary):hover,
+.modal-actions button[type="button"]:not(.btn-sm):not(.btn-primary):hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text);
+}
+
+.btn-ghost:focus-visible,
+.form-actions button[type="button"]:not(.btn-sm):not(.btn-primary):focus-visible,
+.modal-actions button[type="button"]:not(.btn-sm):not(.btn-primary):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-ring);
 }
 
 .badge {
@@ -153,12 +238,7 @@ body {
 
 .auth-page button[type="submit"] {
   margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  width: 100%;
 }
 
 .landing {
@@ -267,6 +347,293 @@ body {
   box-sizing: border-box;
 }
 
+/* Contenedor del editor de comida en modal o ruta /comidas (sin padding) */
+.modal-content.modal-meal-shell {
+  padding: 0;
+  max-width: min(99vw, 704px);
+  width: 100%;
+  max-height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  border: none;
+  box-shadow:
+    0 10px 25px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+.editor-page .modal-content.modal-meal-shell {
+  max-height: none;
+}
+
+.editor-page .modal-content.modal-meal-shell .meal-editor--modal,
+.editor-page .modal-content.modal-meal-shell .meal-editor--modal form {
+  max-height: none;
+}
+
+.modal-content-wide.modal-meal-shell {
+  max-width: min(99vw, 704px);
+  width: 100%;
+}
+
+/* Modal de registro del día (Inicio / calendario): mismo lenguaje visual que el editor de comidas */
+.modal-content.modal-checkin-shell {
+  --meal-primary: #5d5fef;
+  --meal-primary-light: #eef0ff;
+  --meal-text-main: #2b3648;
+  --meal-text-muted: #6b7a90;
+  --meal-border: #e2e8f0;
+  --meal-bg-main: #ffffff;
+  --meal-bg-section: #f8fafc;
+
+  padding: 0;
+  max-width: min(99vw, 520px);
+  width: 100%;
+  max-height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  border: none;
+  box-shadow:
+    0 10px 25px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
+  background: var(--meal-bg-main);
+}
+
+.modal-content.modal-checkin-shell form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  max-height: 88vh;
+}
+
+.modal-checkin-shell .meal-modal-header {
+  padding: 1.5rem 2rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--meal-border);
+  flex-shrink: 0;
+  background: var(--meal-bg-main);
+}
+
+.modal-checkin-shell .meal-modal-subtitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--meal-primary);
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.modal-checkin-shell .meal-modal-header h2 {
+  margin: 0;
+  color: var(--meal-text-main);
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.modal-checkin-shell .meal-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.125rem;
+  color: var(--meal-text-muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem;
+}
+
+.modal-checkin-shell .meal-modal-body {
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  background: var(--meal-bg-main);
+}
+
+.modal-checkin-shell .meal-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--meal-text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-checkin-shell .meal-form-group label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--meal-text-main);
+  margin-bottom: 0.5rem;
+}
+
+.modal-checkin-shell .meal-modal-footer {
+  padding: 1.25rem 2rem;
+  border-top: 1px solid var(--meal-border);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--meal-bg-main);
+  flex-shrink: 0;
+}
+
+.modal-checkin-shell .meal-footer-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.modal-checkin-shell .meal-btn-cancel {
+  background: none;
+  border: none;
+  color: var(--meal-text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.modal-checkin-shell .meal-btn-submit {
+  background-color: var(--meal-primary);
+  color: #fff;
+  border: none;
+  padding: 0.625rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+}
+
+.modal-checkin-shell .meal-btn-submit:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.modal-checkin-shell .meal-btn-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.modal-checkin-shell .meal-btn-text-primary {
+  background: none;
+  border: none;
+  color: var(--meal-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.modal-checkin-shell label {
+  margin-top: 0;
+}
+
+.modal-checkin-shell .meal-modal-body > .checkin-modal-section:first-child .meal-section-title {
+  margin-top: 0;
+}
+
+.modal-checkin-shell input[type="radio"] {
+  width: auto;
+  margin: 0.15rem 0.65rem 0 0;
+  flex-shrink: 0;
+  accent-color: var(--meal-primary);
+}
+
+.modal-checkin-shell .meal-form-group input,
+.modal-checkin-shell .meal-form-group select {
+  margin-top: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--meal-border);
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  color: var(--meal-text-main);
+}
+
+.modal-checkin-shell .meal-form-group select {
+  background: var(--meal-bg-main);
+}
+
+.checkin-modal-section {
+  margin-bottom: 1.5rem;
+}
+
+.checkin-modal-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.checkin-help-text {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+}
+
+.checkin-radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checkin-radio-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--meal-bg-section);
+  border: 1px solid var(--meal-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--meal-text-main);
+  line-height: 1.35;
+}
+
+.checkin-radio-row span {
+  flex: 1;
+}
+
+.checkin-meals-block .meal-log-row {
+  margin-bottom: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.checkin-meals-block .meal-log-row input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  margin-top: 0;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--meal-border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--meal-text-main);
+  box-sizing: border-box;
+}
+
+.checkin-meals-block .btn-add-meal {
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 520px) {
+  .modal-checkin-shell .meal-modal-header,
+  .modal-checkin-shell .meal-modal-body,
+  .modal-checkin-shell .meal-modal-footer {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
 .meal-log-row {
   display: flex;
   gap: 0.5rem;
@@ -276,8 +643,10 @@ body {
 .modal-actions {
   margin-top: 1.25rem;
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .weight-form {
@@ -312,6 +681,17 @@ body {
   max-width: 640px;
 }
 
+.editor-page.meal-editor-page {
+  max-width: min(99vw, 720px);
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+
+.meal-editor-route-shell {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .diet-editor-page {
   max-width: 1400px;
 }
@@ -336,7 +716,10 @@ body {
 .form-actions {
   margin-top: 1.25rem;
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .nutrition-row {

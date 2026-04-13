@@ -42,8 +42,8 @@ export default function DietaEditar() {
     return (
       <div className="card">
         <p>Dieta no encontrada.</p>
-        <button type="button" onClick={() => navigate("/dietas")}>
-          Volver a dietas
+        <button type="button" className="btn-ghost" onClick={() => navigate("/dietas")}>
+          ← Volver a dietas
         </button>
       </div>
     );
@@ -53,8 +53,8 @@ export default function DietaEditar() {
     <div className="editor-page diet-editor-page">
       <header className="page-header">
         <h1>{diet.name || "Editar dieta"}</h1>
-        <button type="button" onClick={() => navigate("/dietas")}>
-          Volver
+        <button type="button" className="btn-ghost" onClick={() => navigate("/dietas")}>
+          ← Volver
         </button>
       </header>
       <WeeklyDietEditor diet={diet} userId={user.id} onUpdate={refetch} />

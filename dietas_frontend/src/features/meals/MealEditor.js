@@ -96,6 +96,10 @@ export default function MealEditor({
   onCancel,
   saveButtonLabel = "Guardar",
   compact = false,
+  modalTitle = "",
+  modalSubtitle = "",
+  modalInfoText = "",
+  modalCloseLabel = null,
 }) {
   const isNew = !meal?.id;
   const [name, setName] = useState(meal?.name || "");
@@ -182,8 +186,8 @@ export default function MealEditor({
     setComponents((prev) =>
       editingComponentTempId
         ? prev.map((component) =>
-          component.tempId === editingComponentTempId ? nextComponent : component
-        )
+            component.tempId === editingComponentTempId ? nextComponent : component
+          )
         : [...prev, nextComponent]
     );
     setError("");
@@ -317,13 +321,379 @@ export default function MealEditor({
     }
   };
 
+  const titleHeading =
+    modalTitle.trim() || (isNew ? "Crear nueva comida" : "Editar comida");
+
+  const defaultInfoText =
+    "Los cambios aplicados a esta plantilla se verán reflejados en todos los días de esta dieta y en tu biblioteca personal.";
+
+  const totalSummary = `${toNumericValue(calories).toFixed(0)} kcal | ${toNumericValue(protein).toFixed(0)}P | ${toNumericValue(fat).toFixed(0)}G | ${toNumericValue(carbs).toFixed(0)}C`;
+
+  const toggleComponentBuilder = () => {
+    setShowComponentBuilder((prev) => !prev);
+    if (showComponentBuilder) resetDraft();
+  };
+
+  const componentsBlock = (
+    <>
+      <div
+        className={
+          compact ? "meal-section-header-split" : "meal-components-inline-head"
+        }
+      >
+        <div>
+          {compact ? (
+            <span className="meal-section-title meal-section-title--inline">DESGLOSE DE ALIMENTOS</span>
+          ) : (
+            <>
+              <p className="meal-components-inline-title">
+                Si quieres dejar mas detalle, puedes anadir alimentos
+              </p>
+              <p className="text-muted">
+                Guarda solo el desglose que te interese y deja el resto sin completar.
+              </p>
+            </>
+          )}
+        </div>
+        <button
+          type="button"
+          className={compact ? "meal-link-muted" : "btn-sm"}
+          onClick={toggleComponentBuilder}
+        >
+          {showComponentBuilder
+            ? "Ocultar detalle"
+            : components.length
+              ? compact
+                ? "Editar desglose ›"
+                : "Editar desglose"
+              : compact
+                ? "Editar desglose ›"
+                : "Anadir desglose"}
+        </button>
+      </div>
+
+      {compact && components.length === 0 && !showComponentBuilder && (
+        <div className="meal-empty-state">
+          <div className="meal-empty-icon" aria-hidden>
+            🍽️
+          </div>
+          <p>No has añadido alimentos individuales todavía.</p>
+          <button type="button" className="meal-btn-text-primary" onClick={() => setShowComponentBuilder(true)}>
+            Añadir primer ingrediente
+          </button>
+        </div>
+      )}
+
+      {components.length > 0 && (
+        <>
+          {!compact && (
+            <div className="component-totals">
+              <span>{componentTotals.calories.toFixed(1)} kcal</span>
+              <span>P {componentTotals.protein.toFixed(1)}</span>
+              <span>G {componentTotals.fat.toFixed(1)}</span>
+              <span>C {componentTotals.carbs.toFixed(1)}</span>
+            </div>
+          )}
+          <div className="component-chip-list">
+            {components.map((component) => {
+              const tooltipRows = [
+                {
+                  label: "Cantidad",
+                  value: `${formatDecimal(component.quantity)} ${component.unit || "g"}`,
+                },
+                ...OPTIONAL_COMPONENT_FIELDS.filter(({ key }) => hasMeaningfulNumber(component[key])).map(
+                  ({ key, label, shortLabel }) => ({
+                    label,
+                    value:
+                      key === "calories"
+                        ? `${formatDecimal(component[key])} ${shortLabel}`
+                        : `${formatDecimal(component[key])} g`,
+                  })
+                ),
+              ];
+
+              return (
+                <div
+                  key={component.tempId}
+                  className={`component-chip-wrapper ${
+                    editingComponentTempId === component.tempId ? "component-chip-wrapper-active" : ""
+                  }`}
+                >
+                  <button
+                    type="button"
+                    className="component-chip"
+                    onClick={() => editComponent(component)}
+                  >
+                    {component.name || "Alimento"}
+                  </button>
+                  <button
+                    type="button"
+                    className="component-chip-remove"
+                    aria-label={`Eliminar ${component.name || "alimento"}`}
+                    onClick={() => removeComponent(component.tempId)}
+                  >
+                    x
+                  </button>
+                  <div className="component-chip-tooltip">
+                    <strong>{component.name || "Alimento"}</strong>
+                    <ul>
+                      {tooltipRows.map((row) => (
+                        <li key={`${component.tempId}-${row.label}`}>
+                          <span>{row.label}</span>
+                          <span>{row.value}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {showComponentBuilder && (
+        <div className="component-builder card-muted">
+          <div className="component-builder-head">
+            <div>
+              <h3>{editingComponentTempId ? "Editar alimento" : "Anadir alimento"}</h3>
+              <p className="text-muted">Primero elige que datos quieres guardar para este alimento.</p>
+            </div>
+            {components.length > 0 && (
+              <button type="button" className="btn-sm" onClick={applyComponentTotals}>
+                Recalcular nutricion
+              </button>
+            )}
+          </div>
+
+          <div className="component-field-picker">
+            {OPTIONAL_COMPONENT_FIELDS.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                className={`component-field-toggle ${
+                  enabledComponentFields.includes(key) ? "component-field-toggle-active" : ""
+                }`}
+                onClick={() => toggleComponentField(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="component-draft-grid">
+            <div className="component-draft-name-qty-row">
+              <label className="component-draft-name-field">
+                Alimento
+                <input
+                  value={componentDraft.name}
+                  onChange={(e) => updateComponentDraftField("name", e.target.value)}
+                  placeholder="Pollo"
+                />
+              </label>
+              <label className="quantity-combined-label component-draft-qty-field">
+                Cantidad
+                <div className="quantity-field-row">
+                  <input
+                    className="quantity-input-part"
+                    type="number"
+                    step="0.1"
+                    value={componentDraft.quantity}
+                    onChange={(e) => updateComponentDraftField("quantity", e.target.value)}
+                  />
+                  <select
+                    className="quantity-unit-part"
+                    aria-label="Unidad de la cantidad"
+                    value={componentDraft.unit}
+                    onChange={(e) => updateComponentDraftField("unit", e.target.value)}
+                  >
+                    {COMPONENT_UNIT_OPTIONS.map((unitOption) => (
+                      <option key={unitOption} value={unitOption}>
+                        {unitOption}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </label>
+            </div>
+            {OPTIONAL_COMPONENT_FIELDS.filter(({ key }) => enabledComponentFields.includes(key)).map(
+              ({ key, inputLabel }) => (
+                <label key={key}>
+                  {inputLabel}
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={componentDraft[key]}
+                    onChange={(e) => updateComponentDraftField(key, e.target.value)}
+                  />
+                </label>
+              )
+            )}
+          </div>
+
+          <div className="component-draft-actions">
+            <button type="button" className="btn-primary" onClick={saveComponentDraft}>
+              {editingComponentTempId ? "Guardar alimento" : "Anadir alimento"}
+            </button>
+            <button type="button" className="btn-sm" onClick={resetDraft}>
+              Limpiar
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  if (compact) {
+    return (
+      <div className="meal-editor meal-editor--modal meal-editor-compact">
+        <form onSubmit={save}>
+          <header className="meal-modal-header">
+            <div>
+              {modalSubtitle.trim() ? (
+                <span className="meal-modal-subtitle">{modalSubtitle}</span>
+              ) : null}
+              <h2>{titleHeading}</h2>
+            </div>
+            <button
+              type="button"
+              className={`meal-modal-close ${modalCloseLabel ? "meal-modal-close--wide" : ""}`}
+              aria-label={modalCloseLabel ? "Volver" : "Cerrar"}
+              onClick={onCancel}
+            >
+              {modalCloseLabel ?? "✕"}
+            </button>
+          </header>
+
+          <div className="meal-modal-body">
+            <div className="meal-info-alert">
+              <span className="meal-info-alert-icon" aria-hidden>
+                ⓘ
+              </span>
+              <p>{modalInfoText.trim() || defaultInfoText}</p>
+            </div>
+
+            <section className="meal-modal-section">
+              <div className="meal-section-title">
+                <span aria-hidden>🍴</span>
+                <span>DATOS GENERALES</span>
+              </div>
+              <div className="meal-form-group">
+                <label htmlFor="meal-name-input">Nombre de la comida</label>
+                <input
+                  id="meal-name-input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="meal-form-group">
+                <label htmlFor="meal-notes-input">Notas adicionales</label>
+                <textarea
+                  id="meal-notes-input"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={4}
+                  placeholder="Ej.: Ideal para post-entreno o cena ligera…"
+                />
+              </div>
+            </section>
+
+            <section className="meal-nutrition-section">
+              <div className="meal-nutrition-header">
+                <div className="meal-nutrition-title">
+                  <span aria-hidden>📓</span>
+                  <span>Nutrición principal</span>
+                </div>
+                {components.length > 0 && (
+                  <button type="button" className="meal-btn-text-upper" onClick={applyComponentTotals}>
+                    RECALCULAR DESDE ALIMENTOS
+                  </button>
+                )}
+              </div>
+
+              <div className="nutrition-cards">
+                <div className="nutri-card cal">
+                  <span className="nutri-card-label">🔥 CALORÍAS</span>
+                  <input
+                    className="nutri-card-input"
+                    type="number"
+                    step="0.1"
+                    value={calories}
+                    onChange={(e) => setCalories(e.target.value)}
+                    aria-label="Calorías"
+                  />
+                </div>
+                <div className="nutri-card pro">
+                  <span className="nutri-card-label">🥩 PROTEÍNAS (G)</span>
+                  <input
+                    className="nutri-card-input"
+                    type="number"
+                    step="0.1"
+                    value={protein}
+                    onChange={(e) => setProtein(e.target.value)}
+                    aria-label="Proteínas en gramos"
+                  />
+                </div>
+                <div className="nutri-card fat">
+                  <span className="nutri-card-label">🥑 GRASAS (G)</span>
+                  <input
+                    className="nutri-card-input"
+                    type="number"
+                    step="0.1"
+                    value={fat}
+                    onChange={(e) => setFat(e.target.value)}
+                    aria-label="Grasas en gramos"
+                  />
+                </div>
+                <div className="nutri-card carb">
+                  <span className="nutri-card-label">🌾 CARBOHIDRATOS (G)</span>
+                  <input
+                    className="nutri-card-input"
+                    type="number"
+                    step="0.1"
+                    value={carbs}
+                    onChange={(e) => setCarbs(e.target.value)}
+                    aria-label="Carbohidratos en gramos"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section className="meal-modal-section meal-modal-section--breakdown">
+              <div className="meal-components-inline meal-components-inline--compact">{componentsBlock}</div>
+            </section>
+
+            {error && <p className="error-msg">{error}</p>}
+            {success && <p className="success-msg">{success}</p>}
+          </div>
+
+          <footer className="meal-modal-footer">
+            <div className="meal-footer-totals">
+              <span className="meal-total-label">TOTAL ESTIMADO</span>
+              <span className="meal-total-value">{totalSummary}</span>
+            </div>
+            <div className="meal-footer-actions">
+              <button type="button" className="meal-btn-cancel" onClick={onCancel}>
+                Cancelar
+              </button>
+              <button type="submit" className="meal-btn-submit" disabled={saving}>
+                {saving ? "Guardando…" : saveButtonLabel}
+              </button>
+            </div>
+          </footer>
+        </form>
+      </div>
+    );
+  }
+
   return (
-    <div className={`meal-editor card ${compact ? "meal-editor-compact" : ""}`}>
+    <div className="meal-editor card">
       <form onSubmit={save}>
         <div className="meal-editor-hero">
           <div>
             <p className="meal-editor-kicker">Comida reutilizable</p>
-            <h2>{isNew ? "Crear nueva comida" : "Editar comida"}</h2>
+            <h2>{titleHeading}</h2>
             <p className="text-muted">
               Define la comida principal y, si quieres, añade los alimentos que la componen.
             </p>
@@ -342,7 +712,7 @@ export default function MealEditor({
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            rows={compact ? 2 : 3}
+            rows={3}
             placeholder="Ejemplo: ideal para post entreno o cena ligera"
           />
         </label>
@@ -392,182 +762,7 @@ export default function MealEditor({
           </div>
         </section>
 
-        <div className="meal-components-inline">
-          <div className="meal-components-inline-head">
-            <div>
-              <p className="meal-components-inline-title">Si quieres dejar mas detalle, puedes anadir alimentos</p>
-              <p className="text-muted">
-                Guarda solo el desglose que te interese y deja el resto sin completar.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="btn-sm"
-              onClick={() => {
-                setShowComponentBuilder((prev) => !prev);
-                if (showComponentBuilder) resetDraft();
-              }}
-            >
-              {showComponentBuilder ? "Ocultar detalle" : components.length ? "Editar desglose" : "Anadir desglose"}
-            </button>
-          </div>
-
-          {components.length > 0 && (
-            <>
-              <div className="component-totals">
-                <span>{componentTotals.calories.toFixed(1)} kcal</span>
-                <span>P {componentTotals.protein.toFixed(1)}</span>
-                <span>G {componentTotals.fat.toFixed(1)}</span>
-                <span>C {componentTotals.carbs.toFixed(1)}</span>
-              </div>
-              <div className="component-chip-list">
-                {components.map((component) => {
-                  const tooltipRows = [
-                    {
-                      label: "Cantidad",
-                      value: `${formatDecimal(component.quantity)} ${component.unit || "g"}`,
-                    },
-                    ...OPTIONAL_COMPONENT_FIELDS.filter(({ key }) => hasMeaningfulNumber(component[key])).map(
-                      ({ key, label, shortLabel }) => ({
-                        label,
-                        value:
-                          key === "calories"
-                            ? `${formatDecimal(component[key])} ${shortLabel}`
-                            : `${formatDecimal(component[key])} g`,
-                      })
-                    ),
-                  ];
-
-                  return (
-                    <div
-                      key={component.tempId}
-                      className={`component-chip-wrapper ${editingComponentTempId === component.tempId ? "component-chip-wrapper-active" : ""
-                        }`}
-                    >
-                      <button
-                        type="button"
-                        className="component-chip"
-                        onClick={() => editComponent(component)}
-                      >
-                        {component.name || "Alimento"}
-                      </button>
-                      <button
-                        type="button"
-                        className="component-chip-remove"
-                        aria-label={`Eliminar ${component.name || "alimento"}`}
-                        onClick={() => removeComponent(component.tempId)}
-                      >
-                        x
-                      </button>
-                      <div className="component-chip-tooltip">
-                        <strong>{component.name || "Alimento"}</strong>
-                        <ul>
-                          {tooltipRows.map((row) => (
-                            <li key={`${component.tempId}-${row.label}`}>
-                              <span>{row.label}</span>
-                              <span>{row.value}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-
-          {showComponentBuilder && (
-            <div className="component-builder card-muted">
-              <div className="component-builder-head">
-                <div>
-                  <h3>{editingComponentTempId ? "Editar alimento" : "Anadir alimento"}</h3>
-                  <p className="text-muted">
-                    Primero elige que datos quieres guardar para este alimento.
-                  </p>
-                </div>
-                {components.length > 0 && (
-                  <button type="button" className="btn-sm" onClick={applyComponentTotals}>
-                    Recalcular nutricion
-                  </button>
-                )}
-              </div>
-
-              <div className="component-field-picker">
-                {OPTIONAL_COMPONENT_FIELDS.map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`component-field-toggle ${enabledComponentFields.includes(key) ? "component-field-toggle-active" : ""
-                      }`}
-                    onClick={() => toggleComponentField(key)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="component-draft-grid">
-                <div className="component-draft-name-qty-row">
-                  <label className="component-draft-name-field">
-                    Alimento
-                    <input
-                      value={componentDraft.name}
-                      onChange={(e) => updateComponentDraftField("name", e.target.value)}
-                      placeholder="Pollo"
-                    />
-                  </label>
-                  <label className="quantity-combined-label component-draft-qty-field">
-                    Cantidad
-                    <div className="quantity-field-row">
-                      <input
-                        className="quantity-input-part"
-                        type="number"
-                        step="0.1"
-                        value={componentDraft.quantity}
-                        onChange={(e) => updateComponentDraftField("quantity", e.target.value)}
-                      />
-                      <select
-                        className="quantity-unit-part"
-                        aria-label="Unidad de la cantidad"
-                        value={componentDraft.unit}
-                        onChange={(e) => updateComponentDraftField("unit", e.target.value)}
-                      >
-                        {COMPONENT_UNIT_OPTIONS.map((unitOption) => (
-                          <option key={unitOption} value={unitOption}>
-                            {unitOption}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </label>
-                </div>
-                {OPTIONAL_COMPONENT_FIELDS.filter(({ key }) => enabledComponentFields.includes(key)).map(
-                  ({ key, inputLabel }) => (
-                    <label key={key}>
-                      {inputLabel}
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={componentDraft[key]}
-                        onChange={(e) => updateComponentDraftField(key, e.target.value)}
-                      />
-                    </label>
-                  )
-                )}
-              </div>
-
-              <div className="component-draft-actions">
-                <button type="button" className="btn-primary" onClick={saveComponentDraft}>
-                  {editingComponentTempId ? "Guardar alimento" : "Anadir alimento"}
-                </button>
-                <button type="button" className="btn-sm" onClick={resetDraft}>
-                  Limpiar
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <div className="meal-components-inline">{componentsBlock}</div>
 
         {error && <p className="error-msg">{error}</p>}
         {success && <p className="success-msg">{success}</p>}

@@ -12,14 +12,20 @@ export default function ComidaNueva() {
   };
 
   return (
-    <div className="editor-page">
-      <header className="page-header">
-        <h1>Nueva comida</h1>
-        <button type="button" onClick={() => navigate("/comidas")}>
-          Volver
-        </button>
-      </header>
-      <MealEditor userId={user?.id} onSaved={onSaved} onCancel={() => navigate("/comidas")} />
+    <div className="editor-page meal-editor-page">
+      <div className="modal-content modal-content-wide modal-meal-shell meal-editor-route-shell">
+        <MealEditor
+          userId={user?.id}
+          onSaved={onSaved}
+          onCancel={() => navigate("/comidas")}
+          saveButtonLabel="Guardar comida"
+          compact
+          modalSubtitle="BIBLIOTECA DE COMIDAS"
+          modalTitle="Nueva comida"
+          modalInfoText="La comida se guarda en tu biblioteca personal. Podrás asignarla a cualquier día de tus dietas."
+          modalCloseLabel="← Volver"
+        />
+      </div>
     </div>
   );
 }

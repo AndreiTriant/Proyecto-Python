@@ -16,6 +16,13 @@ export default function DayCheckinModal({ date, userId, onClose, onSaved }) {
 
   const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
+  const dateTitle = date.toLocaleDateString("es", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   const addMeal = () => {
     setMeals((prev) => [...prev, { name: "", calories_approx: "" }]);
   };
@@ -63,73 +70,109 @@ export default function DayCheckinModal({ date, userId, onClose, onSaved }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h3>Registrar día · {dateStr}</h3>
+      <div
+        className="modal-content modal-checkin-shell"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="checkin-modal-title"
+      >
         <form onSubmit={handleSubmit}>
-          <div>
-            <label>Estado</label>
-            {STATUSES.map((s) => (
-              <label key={s.value}>
-                <input
-                  type="radio"
-                  name="status"
-                  value={s.value}
-                  checked={status === s.value}
-                  onChange={() => setStatus(s.value)}
-                />
-                {s.label}
-              </label>
-            ))}
-          </div>
-          {status === "followed_other_day" && (
+          <header className="meal-modal-header">
             <div>
-              <label>Día de la dieta usado</label>
-              <select
-                value={weekdayUsed}
-                onChange={(e) => setWeekdayUsed(e.target.value)}
-              >
-                <option value="">—</option>
-                <option value="lunes">Lunes</option>
-                <option value="martes">Martes</option>
-                <option value="miercoles">Miércoles</option>
-                <option value="jueves">Jueves</option>
-                <option value="viernes">Viernes</option>
-                <option value="sabado">Sábado</option>
-                <option value="domingo">Domingo</option>
-              </select>
+              <span className="meal-modal-subtitle">REGISTRO DEL DÍA</span>
+              <h2 id="checkin-modal-title">{dateTitle}</h2>
             </div>
-          )}
-          {status === "not_followed" && (
-            <div>
-              <label>Comidas consumidas (aproximado)</label>
-              {meals.map((m, i) => (
-                <div key={i} className="meal-log-row">
-                  <input
-                    placeholder="Nombre"
-                    value={m.name}
-                    onChange={(e) => updateMeal(i, "name", e.target.value)}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Calorías"
-                    value={m.calories_approx}
-                    onChange={(e) => updateMeal(i, "calories_approx", e.target.value)}
-                  />
+            <button type="button" className="meal-modal-close" aria-label="Cerrar" onClick={onClose}>
+              ✕
+            </button>
+          </header>
+
+          <div className="meal-modal-body">
+            <section className="checkin-modal-section">
+              <div className="meal-section-title">
+                <span aria-hidden>📋</span>
+                <span>ESTADO</span>
+              </div>
+              <div className="checkin-radio-list">
+                {STATUSES.map((s) => (
+                  <label key={s.value} className="checkin-radio-row">
+                    <input
+                      type="radio"
+                      name="status"
+                      value={s.value}
+                      checked={status === s.value}
+                      onChange={() => setStatus(s.value)}
+                    />
+                    <span>{s.label}</span>
+                  </label>
+                ))}
+              </div>
+            </section>
+
+            {status === "followed_other_day" && (
+              <section className="checkin-modal-section">
+                <div className="meal-form-group">
+                  <label htmlFor="checkin-weekday-used">Día de la dieta usado</label>
+                  <select
+                    id="checkin-weekday-used"
+                    value={weekdayUsed}
+                    onChange={(e) => setWeekdayUsed(e.target.value)}
+                  >
+                    <option value="">—</option>
+                    <option value="lunes">Lunes</option>
+                    <option value="martes">Martes</option>
+                    <option value="miercoles">Miércoles</option>
+                    <option value="jueves">Jueves</option>
+                    <option value="viernes">Viernes</option>
+                    <option value="sabado">Sábado</option>
+                    <option value="domingo">Domingo</option>
+                  </select>
                 </div>
-              ))}
-              <button type="button" onClick={addMeal}>
-                Añadir comida
+              </section>
+            )}
+
+            {status === "not_followed" && (
+              <section className="checkin-modal-section checkin-meals-block">
+                <div className="meal-section-title">
+                  <span aria-hidden>🍽️</span>
+                  <span>COMIDAS (APROX.)</span>
+                </div>
+                <p className="text-muted checkin-help-text">
+                  Opcional: anota qué comiste y una estimación de calorías.
+                </p>
+                {meals.map((m, i) => (
+                  <div key={i} className="meal-log-row">
+                    <input
+                      placeholder="Nombre"
+                      value={m.name}
+                      onChange={(e) => updateMeal(i, "name", e.target.value)}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Calorías"
+                      value={m.calories_approx}
+                      onChange={(e) => updateMeal(i, "calories_approx", e.target.value)}
+                    />
+                  </div>
+                ))}
+                <button type="button" className="meal-btn-text-primary btn-add-meal" onClick={addMeal}>
+                  + Añadir comida
+                </button>
+              </section>
+            )}
+          </div>
+
+          <footer className="meal-modal-footer">
+            <div className="meal-footer-actions">
+              <button type="button" className="meal-btn-cancel" onClick={onClose}>
+                Cancelar
+              </button>
+              <button type="submit" className="meal-btn-submit" disabled={saving}>
+                {saving ? "Guardando…" : "Guardar"}
               </button>
             </div>
-          )}
-          <div className="modal-actions">
-            <button type="button" onClick={onClose}>
-              Cancelar
-            </button>
-            <button type="submit" disabled={saving}>
-              {saving ? "Guardando…" : "Guardar"}
-            </button>
-          </div>
+          </footer>
         </form>
       </div>
     </div>
