@@ -327,17 +327,17 @@
 }
 
 /* Calorías más naranjas (bloque nutrición principal) */
-.meal-editor .nutrition-row > label:first-of-type {
+.meal-editor .nutrition-row>label:first-of-type {
   color: #c2410c;
   font-weight: 600;
 }
 
-.meal-editor .nutrition-row > label:first-of-type input {
+.meal-editor .nutrition-row>label:first-of-type input {
   border-color: rgba(249, 115, 22, 0.55);
   background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
 }
 
-.meal-editor .nutrition-row > label:first-of-type input:focus {
+.meal-editor .nutrition-row>label:first-of-type input:focus {
   outline: none;
   border-color: #ea580c;
   box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.22);
@@ -376,6 +376,16 @@
   display: flex;
   flex-direction: column;
   max-height: inherit;
+  max-height: min(88vh, 100dvh);
+  overflow: hidden;
+}
+
+.modal-content.modal-meal-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(88vh, 100dvh);
+  overflow: hidden;
 }
 
 .modal-content.modal-meal-shell .meal-editor--modal form {
@@ -383,7 +393,8 @@
   flex-direction: column;
   min-height: 0;
   flex: 1;
-  max-height: 88vh;
+  height: 100%;
+  max-height: 100%;
 }
 
 .meal-modal-header {
@@ -438,6 +449,9 @@
 .meal-modal-body {
   padding: 1.5rem 2rem;
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   flex: 1;
   min-height: 0;
   background: var(--meal-bg-main);
@@ -776,6 +790,7 @@
 }
 
 @media (max-width: 520px) {
+
   .meal-modal-header,
   .meal-modal-body,
   .meal-modal-footer {
