@@ -363,12 +363,13 @@ a.btn-primary:focus-visible,
     0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
-.editor-page .modal-content.modal-meal-shell {
+/* Solo pantalla completa /comidas/nueva y /comidas/:id/editar (no modales dentro del editor de dieta) */
+.editor-page .modal-content.modal-meal-shell.meal-editor-route-shell {
   max-height: none;
 }
 
-.editor-page .modal-content.modal-meal-shell .meal-editor--modal,
-.editor-page .modal-content.modal-meal-shell .meal-editor--modal form {
+.editor-page .modal-content.modal-meal-shell.meal-editor-route-shell .meal-editor--modal,
+.editor-page .modal-content.modal-meal-shell.meal-editor-route-shell .meal-editor--modal form {
   max-height: none;
 }
 
