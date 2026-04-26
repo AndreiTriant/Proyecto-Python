@@ -15,7 +15,7 @@ from config import (
     SESSION_LIFETIME_DAYS,
 )
 from extensions import db, migrate
-from routes import auth_bp, diets_bp, meals_bp, tracking_bp, progress_bp
+from routes import auth_bp, diets_bp, meals_bp, ai_bp, tracking_bp, progress_bp
 
 app = Flask(__name__)
 # Clave para firmar la cookie de sesión; en producción usar FLASK_SECRET_KEY en el entorno.
@@ -57,6 +57,7 @@ import models  # noqa: E402
 app.register_blueprint(auth_bp)
 app.register_blueprint(diets_bp)
 app.register_blueprint(meals_bp)
+app.register_blueprint(ai_bp)
 app.register_blueprint(tracking_bp)
 app.register_blueprint(progress_bp)
 

@@ -277,6 +277,9 @@ class MealLogEntry(db.Model):
     date = db.Column(db.Date, nullable=False)
     name = db.Column(db.String(200), nullable=False)
 
+    quantity = db.Column(db.Float, nullable=False, default=1.0)
+    unit = db.Column(db.String(10), nullable=False, default="porción")
+
     calories = db.Column(db.Float, nullable=False, default=0.0)
     protein = db.Column(db.Float, nullable=False, default=0.0)
     fat = db.Column(db.Float, nullable=False, default=0.0)
@@ -300,6 +303,8 @@ class MealLogEntry(db.Model):
             "user_id": self.user_id,
             "date": self.date.isoformat(),
             "name": self.name,
+            "quantity": self.quantity,
+            "unit": self.unit,
             "calories": self.calories,
             "protein": self.protein,
             "fat": self.fat,

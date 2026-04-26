@@ -126,6 +126,7 @@ export default function MealEditor({
   const [showComponentBuilder, setShowComponentBuilder] = useState(false);
   const [editingComponentTempId, setEditingComponentTempId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [estimatingNutrition, setEstimatingNutrition] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -248,6 +249,48 @@ export default function MealEditor({
     setFat(String(componentTotals.fat));
     setCarbs(String(componentTotals.carbs));
     setSuccess("Valores nutricionales recalculados desde los alimentos.");
+  };
+
+  const estimateNutritionWithAI = async () => {
+    if (!userId) return;
+    if (!name.trim()) {
+      setError("El nombre de la comida es obligatorio para usar la IA.");
+      return;
+    }
+    try {
+      setEstimatingNutrition(true);
+      setError("");
+      setSuccess("");
+
+      const q = toNumericValue(mealQuantity);
+      const payload = {
+        name: name.trim(),
+      };
+      if (q > 0) {
+        payload.quantity = q;
+        payload.unit = normalizeMealTemplateUnit(mealUnit);
+      }
+
+      const data = await requestJson(
+        `${API_URL}/api/ai/estimate-meal-nutrition?user_id=${userId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const n = data?.nutrition || {};
+      setCalories(String(n.calories ?? ""));
+      setProtein(String(n.protein ?? ""));
+      setFat(String(n.fat ?? ""));
+      setCarbs(String(n.carbs ?? ""));
+      setSuccess("Valores nutricionales estimados con IA.");
+    } catch (aiError) {
+      setError(aiError.message || "No se pudo estimar la nutrición con IA.");
+    } finally {
+      setEstimatingNutrition(false);
+    }
   };
 
   const syncComponents = async (mealId) => {
@@ -647,11 +690,22 @@ export default function MealEditor({
                   <span aria-hidden>📓</span>
                   <span>Nutrición principal</span>
                 </div>
-                {components.length > 0 && (
-                  <button type="button" className="meal-btn-text-upper" onClick={applyComponentTotals}>
-                    RECALCULAR DESDE ALIMENTOS
+                <div className="meal-nutrition-actions">
+                  <button
+                    type="button"
+                    className="meal-btn-text-upper"
+                    onClick={estimateNutritionWithAI}
+                    disabled={estimatingNutrition}
+                    title="Estima kcal/macros desde el nombre (y cantidad si la indicas)."
+                  >
+                    {estimatingNutrition ? "CALCULANDO…" : "CALCULAR CON IA"}
                   </button>
-                )}
+                  {components.length > 0 && (
+                    <button type="button" className="meal-btn-text-upper" onClick={applyComponentTotals}>
+                      RECALCULAR DESDE ALIMENTOS
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="nutrition-cards">
@@ -790,11 +844,21 @@ export default function MealEditor({
                 Puedes editarla manualmente o recalcularla a partir de los alimentos.
               </p>
             </div>
-            {components.length > 0 && (
-              <button type="button" className="btn-sm" onClick={applyComponentTotals}>
-                Recalcular desde alimentos
+            <div className="meal-editor-nutrition-actions">
+              <button
+                type="button"
+                className="btn-sm"
+                onClick={estimateNutritionWithAI}
+                disabled={estimatingNutrition}
+              >
+                {estimatingNutrition ? "Calculando…" : "Calcular con IA"}
               </button>
-            )}
+              {components.length > 0 && (
+                <button type="button" className="btn-sm" onClick={applyComponentTotals}>
+                  Recalcular desde alimentos
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="nutrition-row">

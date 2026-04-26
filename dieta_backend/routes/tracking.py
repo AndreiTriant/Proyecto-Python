@@ -56,6 +56,10 @@ def _replace_meal_logs_for_day(uid, dt, payload):
         name = (log.get("name") or "").strip()
         if not name:
             continue
+        qty = _float_field(log.get("quantity"), default=1.0)
+        if qty <= 0:
+            qty = 1.0
+        unit = (log.get("unit") or "porción").strip()[:10] or "porción"
         cal = _float_field(log.get("calories"))
         if cal == 0.0:
             cal = _float_field(log.get("calories_approx"))
@@ -77,6 +81,8 @@ def _replace_meal_logs_for_day(uid, dt, payload):
                 user_id=uid,
                 date=dt,
                 name=name,
+                quantity=qty,
+                unit=unit,
                 calories=cal,
                 protein=_float_field(log.get("protein")),
                 fat=_float_field(log.get("fat")),
