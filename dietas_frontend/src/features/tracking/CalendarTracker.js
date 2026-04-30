@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import DayCheckinModal from "./DayCheckinModal";
 
 const WEEKDAYS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+const MONTH_FMT = new Intl.DateTimeFormat("es-ES", { month: "long" });
 
 function getDaysInMonth(year, month) {
   const first = new Date(year, month, 1);
@@ -18,6 +19,14 @@ function getDaysInMonth(year, month) {
   return days;
 }
 
+function isSameCalendarDay(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
 export default function CalendarTracker() {
   const { user } = useAuth();
   const [checkins, setCheckins] = useState({});
@@ -28,6 +37,8 @@ export default function CalendarTracker() {
 
   const year = date.getFullYear();
   const month = date.getMonth();
+  const today = new Date();
+  const monthLabel = MONTH_FMT.format(date);
 
   useEffect(() => {
     if (!user?.id) {
@@ -95,7 +106,11 @@ export default function CalendarTracker() {
 
   return (
     <div className="calendar-tracker">
-      <h3>Calendario</h3>
+      <div className="calendar-header">
+        <h3 className="calendar-title">
+          Calendario <span className="calendar-title-month">{monthLabel}</span>
+        </h3>
+      </div>
       <div className="calendar-grid">
         {WEEKDAYS.map((d) => (
           <div key={d} className="cal-weekday">
@@ -105,7 +120,9 @@ export default function CalendarTracker() {
         {days.map((day, i) => (
           <div
             key={i}
-            className={`cal-day ${day ? statusColor(day) : "cal-out"}`}
+            className={`cal-day ${
+              day ? `${statusColor(day)} ${isSameCalendarDay(day, today) ? "cal-today" : ""}` : "cal-out"
+            }`}
             onClick={() => openModal(day)}
             role={day ? "button" : undefined}
           >

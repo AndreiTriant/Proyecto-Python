@@ -149,6 +149,19 @@ def activate_diet(plan_id):
     return jsonify(plan.to_dict())
 
 
+@bp.route("/<int:plan_id>/deactivate", methods=["POST"])
+def deactivate_diet(plan_id):
+    uid, err = _get_uid()
+    if err:
+        return err
+    plan = db.session.get(DietPlan, plan_id)
+    if not plan or plan.user_id != uid:
+        return jsonify({"ok": False, "error": "Plan no encontrado."}), 404
+    plan.is_active = False
+    db.session.commit()
+    return jsonify(plan.to_dict())
+
+
 @bp.route("/<int:plan_id>/days/<weekday>/meals", methods=["POST"])
 def add_meal_to_day(plan_id, weekday):
     uid, err = _get_uid()

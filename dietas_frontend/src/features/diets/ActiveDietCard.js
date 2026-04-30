@@ -8,7 +8,7 @@ export default function ActiveDietCard() {
   const [diet, setDiet] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = () => {
     if (!user?.id) {
       setLoading(false);
       return;
@@ -22,7 +22,25 @@ export default function ActiveDietCard() {
       })
       .catch(() => setDiet(null))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  const deactivate = () => {
+    if (!diet?.id || !user?.id) return;
+    apiFetch(`${API_URL}/api/diets/${diet.id}/deactivate?user_id=${user.id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    })
+      .then(() => {
+        setDiet(null);
+      })
+      .catch(() => {});
+  };
 
   if (loading) return <div className="card">Cargando dieta activa…</div>;
   if (!diet) {
@@ -37,6 +55,9 @@ export default function ActiveDietCard() {
     <div className="card">
       <h3>Dieta activa</h3>
       <p><strong>{diet.name || "Sin nombre"}</strong></p>
+      <button type="button" className="btn-sm" onClick={deactivate}>
+        Desactivar
+      </button>
     </div>
   );
 }

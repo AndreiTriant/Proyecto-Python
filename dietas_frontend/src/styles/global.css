@@ -255,6 +255,24 @@ a.btn-primary:focus-visible,
   margin-top: 0;
 }
 
+.calendar-header {
+  margin-bottom: 0.75rem;
+}
+
+.calendar-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.calendar-title-month {
+  margin-left: 0.5rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+  font-weight: 800;
+}
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -277,6 +295,10 @@ a.btn-primary:focus-visible,
   font-size: 0.9rem;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.cal-day.cal-today {
+  box-shadow: 0 0 0 2px rgba(93, 95, 239, 0.45) inset;
 }
 
 .cal-out {
