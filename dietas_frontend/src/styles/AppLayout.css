@@ -10,6 +10,7 @@
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
+  overflow: visible;
 }
 
 .sidebar-header {
@@ -50,16 +51,102 @@
 .sidebar-footer {
   padding: 1rem;
   border-top: 1px solid #e5e7eb;
+  overflow: visible;
+}
+
+.account-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .user-name {
   display: block;
   font-size: 0.85rem;
   color: #6b7280;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.account-menu {
+  position: relative;
+}
+
+.account-settings-button {
+  width: auto;
+  height: auto;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.account-settings-button:hover {
+  color: var(--text);
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.account-settings-button:focus-visible {
+  outline: 2px solid rgba(93, 95, 239, 0.55);
+  outline-offset: 2px;
+}
+
+.account-menu-popover {
+  position: absolute;
+  left: 0;
+  right: auto;
+  bottom: calc(100% + 0.5rem);
+  width: min(240px, 84vw);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 14px 38px rgba(15, 23, 42, 0.14);
+  padding: 0.35rem;
+  z-index: 50;
+}
+
+.account-menu-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 0.55rem 0.6rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.account-menu-item:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.account-menu-item-danger {
+  color: #b91c1c;
+}
+
+.account-menu-item-danger:hover:not(:disabled) {
+  background: rgba(185, 28, 28, 0.08);
+}
+
+.account-menu-item:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .btn-logout {
@@ -126,6 +213,16 @@
 
   .user-name {
     margin-bottom: 0;
+  }
+
+  .account-settings-button {
+    width: auto;
+  }
+
+  .account-menu-popover {
+    left: auto;
+    right: 0;
+    width: min(240px, 80vw);
   }
 
   .btn-logout {

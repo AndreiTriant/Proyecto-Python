@@ -286,9 +286,6 @@ export default function WeeklyDietEditor({ diet, userId, onUpdate }) {
           </p>
         </div>
         <div className="weekly-editor-topbar-side">
-          <span className="weekly-summary-pill">
-            {daysWithFallback.reduce((total, day) => total + (day.meals?.length || 0), 0)} comidas en la semana
-          </span>
           {loadingMeals && <span className="text-muted">Cargando biblioteca de comidas...</span>}
         </div>
       </div>
