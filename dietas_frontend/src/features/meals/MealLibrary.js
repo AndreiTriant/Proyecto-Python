@@ -40,7 +40,7 @@ export default function MealLibrary() {
               <strong>{m.name || "Sin nombre"}</strong>
               <span>
                 {Number(m.quantity ?? 1).toLocaleString("es", { maximumFractionDigits: 2 })}{" "}
-                {m.unit || "porción"} · {m.calories ?? 0} kcal · P {m.protein ?? 0} · G {m.fat ?? 0}{" "}
+                {m.unit || "g"} · {m.calories ?? 0} kcal · P {m.protein ?? 0} · G {m.fat ?? 0}{" "}
                 · C {m.carbs ?? 0}
               </span>
               <Link to={`/comidas/${m.id}`}>Editar</Link>

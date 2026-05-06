@@ -25,8 +25,8 @@ def _meal_quantity_value(raw):
 
 
 def _meal_unit_value(raw):
-    u = (raw or "porción").strip()[:10]
-    return u or "porción"
+    u = (raw or "g").strip()[:10]
+    return u or "g"
 
 
 def _serialize_meal(template, include_components=True):

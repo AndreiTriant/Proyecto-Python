@@ -7,6 +7,7 @@ const STATUSES = [
   { value: "followed_other_day", label: "Seguí la dieta pero con comidas de otro día" },
   { value: "not_followed", label: "No seguí la dieta" },
 ];
+const WEEKDAYS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
 
 const emptyMeal = () => ({
   name: "",
@@ -17,7 +18,12 @@ const emptyMeal = () => ({
   notes: "",
 });
 
-export default function DayCheckinModal({ date, userId, onClose, onSaved }) {
+function formatWeekday(value) {
+  if (!value) return "";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+export default function DayCheckinModal({ date, userId, currentWeekday, onClose, onSaved }) {
   const [status, setStatus] = useState("followed_exact");
   const [weekdayUsed, setWeekdayUsed] = useState("");
   const [meals, setMeals] = useState([emptyMeal()]);
@@ -48,8 +54,12 @@ export default function DayCheckinModal({ date, userId, onClose, onSaved }) {
           setMeals([emptyMeal()]);
           return;
         }
-        setStatus(data.status || "followed_exact");
-        setWeekdayUsed(data.weekday_used || "");
+        const savedStatus =
+          data.status === "followed_other_day" && data.weekday_used === currentWeekday
+            ? "followed_exact"
+            : data.status || "followed_exact";
+        setStatus(savedStatus);
+        setWeekdayUsed(savedStatus === "followed_other_day" ? data.weekday_used || "" : "");
         const logs = data.meal_logs || [];
         if (logs.length) {
           setMeals(
@@ -70,7 +80,7 @@ export default function DayCheckinModal({ date, userId, onClose, onSaved }) {
         setMeals([emptyMeal()]);
       })
       .finally(() => setLoading(false));
-  }, [dateStr, userId]);
+  }, [currentWeekday, dateStr, userId]);
 
   const addMeal = () => {
     setMeals((prev) => [...prev, emptyMeal()]);
@@ -84,17 +94,36 @@ export default function DayCheckinModal({ date, userId, onClose, onSaved }) {
     });
   };
 
+  const updateStatus = (nextStatus) => {
+    setStatus(nextStatus);
+    if (nextStatus !== "followed_other_day") {
+      setWeekdayUsed("");
+    }
+  };
+
+  const updateWeekdayUsed = (nextWeekday) => {
+    if (nextWeekday === currentWeekday) {
+      updateStatus("followed_exact");
+      return;
+    }
+    setWeekdayUsed(nextWeekday);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!userId) return;
     setSaving(true);
+    const normalizedStatus =
+      status === "followed_other_day" && weekdayUsed === currentWeekday
+        ? "followed_exact"
+        : status;
     const body = {
       date: dateStr,
-      status,
+      status: normalizedStatus,
       diet_plan_id: null,
-      weekday_used: weekdayUsed || null,
+      weekday_used: normalizedStatus === "followed_other_day" ? weekdayUsed || null : null,
       meal_logs:
-        status === "not_followed"
+        normalizedStatus === "not_followed"
           ? meals
               .filter((m) => m.name.trim())
               .map((m, idx) => ({
@@ -160,7 +189,7 @@ export default function DayCheckinModal({ date, userId, onClose, onSaved }) {
                           name="status"
                           value={s.value}
                           checked={status === s.value}
-                          onChange={() => setStatus(s.value)}
+                          onChange={() => updateStatus(s.value)}
                         />
                         <span>{s.label}</span>
                       </label>
@@ -174,18 +203,25 @@ export default function DayCheckinModal({ date, userId, onClose, onSaved }) {
                       <label htmlFor="checkin-weekday-used">Día de la dieta usado</label>
                       <select
                         id="checkin-weekday-used"
-                        value={weekdayUsed}
-                        onChange={(e) => setWeekdayUsed(e.target.value)}
+                        value={weekdayUsed || ""}
+                        onChange={(e) => updateWeekdayUsed(e.target.value)}
+                        aria-label="Día de la dieta usado"
+                        required
                       >
-                        <option value="">—</option>
-                        <option value="lunes">Lunes</option>
-                        <option value="martes">Martes</option>
-                        <option value="miercoles">Miércoles</option>
-                        <option value="jueves">Jueves</option>
-                        <option value="viernes">Viernes</option>
-                        <option value="sabado">Sábado</option>
-                        <option value="domingo">Domingo</option>
+                        <option value="" disabled hidden>
+                          Selecciona un día de tu dieta
+                        </option>
+                        {WEEKDAYS.map((weekday) => (
+                          <option key={weekday} value={weekday}>
+                            {weekday === currentWeekday
+                              ? `${formatWeekday(weekday)} · Día correspondiente`
+                              : formatWeekday(weekday)}
+                          </option>
+                        ))}
                       </select>
+                      <p className="text-muted checkin-help-text">
+                        Si seleccionas el día correspondiente, lo ajustamos como dieta seguida correctamente.
+                      </p>
                     </div>
                   </section>
                 )}
