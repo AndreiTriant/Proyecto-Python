@@ -326,12 +326,13 @@ export default function CalendarTracker() {
           const dietWeekday =
             status === "followed_other_day" ? checkin?.weekday_used : day ? weekdayFromDate(day) : "";
           const plannedMeals = getPlannedMealsForWeekday(activeDiet, dietWeekday);
+          const col = i % 7;
           return (
             <div
               key={i}
               className={`cal-day ${
                 day ? `${statusColor(day)} ${isSameCalendarDay(day, today) ? "cal-today" : ""}` : "cal-out"
-              }`}
+              } ${day ? `cal-col-${col}` : ""}`}
               onClick={() => openModal(day)}
               role={day ? "button" : undefined}
               tabIndex={day ? 0 : undefined}

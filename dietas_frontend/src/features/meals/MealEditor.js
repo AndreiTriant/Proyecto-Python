@@ -374,12 +374,6 @@ export default function MealEditor({
   const defaultInfoText =
     "Los cambios aplicados a esta plantilla se verán reflejados en todos los días de esta dieta y en tu biblioteca personal.";
 
-  const qtyLabel =
-    mealQuantity.trim() !== "" && toNumericValue(mealQuantity) > 0
-      ? `${formatDecimal(mealQuantity)} ${normalizeMealTemplateUnit(mealUnit)}`
-      : `sin cantidad · ${normalizeMealTemplateUnit(mealUnit)}`;
-  const totalSummary = `${qtyLabel} · ${toNumericValue(calories).toFixed(0)} kcal | ${toNumericValue(protein).toFixed(0)}P | ${toNumericValue(fat).toFixed(0)}G | ${toNumericValue(carbs).toFixed(0)}C`;
-
   const toggleComponentBuilder = () => {
     setShowComponentBuilder((prev) => !prev);
     if (showComponentBuilder) resetDraft();
@@ -398,7 +392,7 @@ export default function MealEditor({
           ) : (
             <>
               <p className="meal-components-inline-title">
-                Si quieres dejar mas detalle, puedes anadir alimentos
+                Si quieres dejar mas detalle, puedes añadir alimentos
               </p>
               <p className="text-muted">
                 Guarda solo el desglose que te interese y deja el resto sin completar.
@@ -419,7 +413,7 @@ export default function MealEditor({
                 : "Editar desglose"
               : compact
                 ? "Editar desglose ›"
-                : "Anadir desglose"}
+                : "Añadir desglose"}
         </button>
       </div>
 
@@ -507,7 +501,7 @@ export default function MealEditor({
         <div className="component-builder card-muted">
           <div className="component-builder-head">
             <div>
-              <h3>{editingComponentTempId ? "Editar alimento" : "Anadir alimento"}</h3>
+              <h3>{editingComponentTempId ? "Editar alimento" : "Añadir alimento"}</h3>
               <p className="text-muted">
                 Completa nombre, cantidad y los nutrientes que quieras; puedes dejar en blanco lo que no uses.
               </p>
@@ -570,7 +564,7 @@ export default function MealEditor({
 
           <div className="component-draft-actions">
             <button type="button" className="btn-primary" onClick={saveComponentDraft}>
-              {editingComponentTempId ? "Guardar alimento" : "Anadir alimento"}
+              {editingComponentTempId ? "Guardar alimento" : "Añadir alimento"}
             </button>
             <button type="button" className="btn-sm" onClick={resetDraft}>
               Limpiar
@@ -745,10 +739,6 @@ export default function MealEditor({
           </div>
 
           <footer className="meal-modal-footer">
-            <div className="meal-footer-totals">
-              <span className="meal-total-label">TOTAL ESTIMADO</span>
-              <span className="meal-total-value">{totalSummary}</span>
-            </div>
             <div className="meal-footer-actions">
               <button type="button" className="meal-btn-cancel" onClick={onCancel}>
                 Cancelar

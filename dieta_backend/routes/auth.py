@@ -107,3 +107,71 @@ def me():
         session.clear()
         return jsonify({"ok": False, "error": "No autenticado."}), 401
     return jsonify({"ok": True, "usuario": user.to_dict()})
+
+
+@bp.route("/account", methods=["DELETE"])
+def delete_account():
+    """
+    Borra la cuenta autenticada (por cookie de sesión) y todos sus datos asociados.
+    """
+    uid = session.get("user_id")
+    if uid is None:
+        return jsonify({"ok": False, "error": "No autenticado."}), 401
+    try:
+        uid = int(uid)
+    except (TypeError, ValueError):
+        session.clear()
+        return jsonify({"ok": False, "error": "No autenticado."}), 401
+
+    user = db.session.get(models.Usuario, uid)
+    if not user:
+        session.clear()
+        return jsonify({"ok": False, "error": "No autenticado."}), 401
+
+    # Borrado manual para evitar problemas de FK (SQLite sin ON DELETE CASCADE por defecto).
+    plan_ids_subq = db.select(models.DietPlan.id).where(models.DietPlan.user_id == uid)
+    day_ids_subq = db.select(models.DietDay.id).where(models.DietDay.diet_plan_id.in_(plan_ids_subq))
+    template_ids_subq = db.select(models.MealTemplate.id).where(models.MealTemplate.user_id == uid)
+
+    try:
+        # Tracking / progreso
+        db.session.execute(
+            db.delete(models.MealLogEntry).where(models.MealLogEntry.user_id == uid)
+        )
+        db.session.execute(
+            db.delete(models.DietDayStatusEntry).where(models.DietDayStatusEntry.user_id == uid)
+        )
+        db.session.execute(
+            db.delete(models.WeightEntry).where(models.WeightEntry.user_id == uid)
+        )
+
+        # Dietas (primero asignaciones, luego días, luego planes)
+        db.session.execute(
+            db.delete(models.DietDayMeal).where(models.DietDayMeal.diet_day_id.in_(day_ids_subq))
+        )
+        db.session.execute(
+            db.delete(models.DietDay).where(models.DietDay.id.in_(day_ids_subq))
+        )
+        db.session.execute(
+            db.delete(models.DietPlan).where(models.DietPlan.user_id == uid)
+        )
+
+        # Comidas (primero componentes)
+        db.session.execute(
+            db.delete(models.MealComponent).where(
+                models.MealComponent.meal_template_id.in_(template_ids_subq)
+            )
+        )
+        db.session.execute(
+            db.delete(models.MealTemplate).where(models.MealTemplate.user_id == uid)
+        )
+
+        # Usuario
+        db.session.delete(user)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        return jsonify({"ok": False, "error": f"No se pudo borrar la cuenta: {exc}"}), 500
+
+    session.clear()
+    return jsonify({"ok": True})

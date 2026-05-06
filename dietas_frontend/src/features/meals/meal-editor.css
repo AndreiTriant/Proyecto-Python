@@ -735,30 +735,12 @@
   padding: 1.25rem 2rem;
   border-top: 1px solid var(--meal-border);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
   background: var(--meal-bg-main);
   flex-shrink: 0;
-}
-
-.meal-footer-totals {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.meal-total-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--meal-text-muted);
-}
-
-.meal-total-value {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--meal-text-main);
 }
 
 .meal-footer-actions {
