@@ -3,9 +3,12 @@ import { API_URL } from "../../constantes";
 import { apiFetch } from "../../services/api";
 import "./meal-editor.css";
 
+const MEAL_QTY_PLACEHOLDER = "250";
+const COMPONENT_QTY_PLACEHOLDER = "100";
+
 const EMPTY_COMPONENT = {
   name: "",
-  quantity: "100",
+  quantity: "",
   unit: "g",
   calories: "",
   protein: "",
@@ -22,7 +25,12 @@ const OPTIONAL_COMPONENT_FIELDS = [
 
 const COMPONENT_UNIT_OPTIONS = ["g", "kg", "mg", "ml", "l", "oz", "lb", "cda"];
 
-const MEAL_TEMPLATE_UNIT_OPTIONS = ["porción", "ración", ...COMPONENT_UNIT_OPTIONS];
+const MEAL_TEMPLATE_UNIT_OPTIONS = ["ración", ...COMPONENT_UNIT_OPTIONS];
+
+function mealTemplateQuantityFromApi(meal) {
+  if (meal == null || meal.quantity == null) return "";
+  return String(meal.quantity);
+}
 
 function normalizeComponentUnit(unit) {
   const u = (unit || "").trim() || "g";
@@ -30,8 +38,11 @@ function normalizeComponentUnit(unit) {
 }
 
 function normalizeMealTemplateUnit(unit) {
-  const u = (unit || "").trim() || "porción";
-  return MEAL_TEMPLATE_UNIT_OPTIONS.includes(u) ? u : "porción";
+  const u = (unit || "").trim();
+  if (!u) return "g";
+  const lower = u.toLowerCase();
+  if (lower === "porción" || lower === "porcion") return "ración";
+  return MEAL_TEMPLATE_UNIT_OPTIONS.includes(u) ? u : "g";
 }
 
 function toNumericValue(value) {
@@ -49,12 +60,6 @@ function hasMeaningfulNumber(value) {
   }
   const numericValue = Number(value);
   return Number.isFinite(numericValue) && numericValue !== 0;
-}
-
-function getEnabledComponentFields(source = []) {
-  return OPTIONAL_COMPONENT_FIELDS.filter(({ key }) =>
-    source.some((component) => hasMeaningfulNumber(component?.[key]))
-  ).map(({ key }) => key);
 }
 
 function sanitizeComponentDraft(component) {
@@ -78,7 +83,7 @@ function createDraftComponent(component = {}, forcedTempId = null) {
     tempId:
       forcedTempId || (component.id ? `existing-${component.id}` : `draft-${Date.now()}-${Math.random()}`),
     name: component.name || "",
-    quantity: String(component.quantity ?? 0),
+    quantity: component.quantity != null ? String(component.quantity) : "",
     unit: normalizeComponentUnit(component.unit),
     calories: String(component.calories ?? 0),
     protein: String(component.protein ?? 0),
@@ -115,14 +120,11 @@ export default function MealEditor({
   const [protein, setProtein] = useState(String(meal?.protein ?? 0));
   const [fat, setFat] = useState(String(meal?.fat ?? 0));
   const [carbs, setCarbs] = useState(String(meal?.carbs ?? 0));
-  const [mealQuantity, setMealQuantity] = useState(String(meal?.quantity ?? 1));
+  const [mealQuantity, setMealQuantity] = useState(mealTemplateQuantityFromApi(meal));
   const [mealUnit, setMealUnit] = useState(normalizeMealTemplateUnit(meal?.unit));
   const [components, setComponents] = useState((meal?.components || []).map(createDraftComponent));
   const [removedComponentIds, setRemovedComponentIds] = useState([]);
   const [componentDraft, setComponentDraft] = useState({ ...EMPTY_COMPONENT });
-  const [enabledComponentFields, setEnabledComponentFields] = useState(
-    getEnabledComponentFields(meal?.components || [])
-  );
   const [showComponentBuilder, setShowComponentBuilder] = useState(false);
   const [editingComponentTempId, setEditingComponentTempId] = useState("");
   const [saving, setSaving] = useState(false);
@@ -137,12 +139,11 @@ export default function MealEditor({
     setProtein(String(meal?.protein ?? 0));
     setFat(String(meal?.fat ?? 0));
     setCarbs(String(meal?.carbs ?? 0));
-    setMealQuantity(String(meal?.quantity ?? 1));
+    setMealQuantity(mealTemplateQuantityFromApi(meal));
     setMealUnit(normalizeMealTemplateUnit(meal?.unit));
     setComponents((meal?.components || []).map(createDraftComponent));
     setRemovedComponentIds([]);
     setComponentDraft({ ...EMPTY_COMPONENT });
-    setEnabledComponentFields(getEnabledComponentFields(meal?.components || []));
     setShowComponentBuilder(false);
     setEditingComponentTempId("");
     setError("");
@@ -172,23 +173,14 @@ export default function MealEditor({
     setEditingComponentTempId("");
   };
 
-  const toggleComponentField = (fieldKey) => {
-    setEnabledComponentFields((prev) => {
-      if (prev.includes(fieldKey)) {
-        setComponentDraft((draft) => ({ ...draft, [fieldKey]: "" }));
-        return prev.filter((field) => field !== fieldKey);
-      }
-      setComponentDraft((draft) => ({
-        ...draft,
-        [fieldKey]: draft[fieldKey] === "0" ? "" : draft[fieldKey],
-      }));
-      return [...prev, fieldKey];
-    });
-  };
-
   const saveComponentDraft = () => {
     if (!componentDraft.name.trim()) {
       setError("El nombre del alimento es obligatorio.");
+      return;
+    }
+    const draftQty = toNumericValue(componentDraft.quantity);
+    if (!hasMeaningfulNumber(componentDraft.quantity) || draftQty <= 0) {
+      setError("La cantidad del alimento es obligatoria.");
       return;
     }
     const nextComponent = createDraftComponent(
@@ -225,21 +217,12 @@ export default function MealEditor({
     setEditingComponentTempId(component.tempId);
     setComponentDraft({
       name: component.name || "",
-      quantity: String(component.quantity ?? 0),
+      quantity: component.quantity != null ? String(component.quantity) : "",
       unit: normalizeComponentUnit(component.unit),
       calories: hasMeaningfulNumber(component.calories) ? String(component.calories) : "",
       protein: hasMeaningfulNumber(component.protein) ? String(component.protein) : "",
       fat: hasMeaningfulNumber(component.fat) ? String(component.fat) : "",
       carbs: hasMeaningfulNumber(component.carbs) ? String(component.carbs) : "",
-    });
-    setEnabledComponentFields((prev) => {
-      const merged = new Set([
-        ...prev,
-        ...OPTIONAL_COMPONENT_FIELDS.filter(({ key }) => toNumericValue(component[key]) !== 0).map(
-          ({ key }) => key
-        ),
-      ]);
-      return [...merged];
     });
   };
 
@@ -285,6 +268,14 @@ export default function MealEditor({
       setProtein(String(n.protein ?? ""));
       setFat(String(n.fat ?? ""));
       setCarbs(String(n.carbs ?? ""));
+      const estQty = n.quantity != null && n.quantity !== "" ? Number(n.quantity) : NaN;
+      if (Number.isFinite(estQty) && estQty > 0) {
+        setMealQuantity(String(estQty));
+      }
+      const estUnit = n.unit != null ? String(n.unit).trim() : "";
+      if (estUnit) {
+        setMealUnit(normalizeMealTemplateUnit(estUnit));
+      }
       setSuccess("Valores nutricionales estimados con IA.");
     } catch (aiError) {
       setError(aiError.message || "No se pudo estimar la nutrición con IA.");
@@ -366,7 +357,6 @@ export default function MealEditor({
 
       const freshMeal = await requestJson(`${API_URL}/api/meals/${template.id}?user_id=${userId}`);
       setComponents((freshMeal.components || []).map(createDraftComponent));
-      setEnabledComponentFields(getEnabledComponentFields(freshMeal.components || []));
       setRemovedComponentIds([]);
       resetDraft();
       setSuccess("Comida guardada correctamente.");
@@ -384,7 +374,10 @@ export default function MealEditor({
   const defaultInfoText =
     "Los cambios aplicados a esta plantilla se verán reflejados en todos los días de esta dieta y en tu biblioteca personal.";
 
-  const qtyLabel = `${formatDecimal(mealQuantity)} ${normalizeMealTemplateUnit(mealUnit)}`;
+  const qtyLabel =
+    mealQuantity.trim() !== "" && toNumericValue(mealQuantity) > 0
+      ? `${formatDecimal(mealQuantity)} ${normalizeMealTemplateUnit(mealUnit)}`
+      : `sin cantidad · ${normalizeMealTemplateUnit(mealUnit)}`;
   const totalSummary = `${qtyLabel} · ${toNumericValue(calories).toFixed(0)} kcal | ${toNumericValue(protein).toFixed(0)}P | ${toNumericValue(fat).toFixed(0)}G | ${toNumericValue(carbs).toFixed(0)}C`;
 
   const toggleComponentBuilder = () => {
@@ -515,28 +508,15 @@ export default function MealEditor({
           <div className="component-builder-head">
             <div>
               <h3>{editingComponentTempId ? "Editar alimento" : "Anadir alimento"}</h3>
-              <p className="text-muted">Primero elige que datos quieres guardar para este alimento.</p>
+              <p className="text-muted">
+                Completa nombre, cantidad y los nutrientes que quieras; puedes dejar en blanco lo que no uses.
+              </p>
             </div>
             {components.length > 0 && (
               <button type="button" className="btn-sm" onClick={applyComponentTotals}>
                 Recalcular nutricion
               </button>
             )}
-          </div>
-
-          <div className="component-field-picker">
-            {OPTIONAL_COMPONENT_FIELDS.map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                className={`component-field-toggle ${
-                  enabledComponentFields.includes(key) ? "component-field-toggle-active" : ""
-                }`}
-                onClick={() => toggleComponentField(key)}
-              >
-                {label}
-              </button>
-            ))}
           </div>
 
           <div className="component-draft-grid">
@@ -556,6 +536,7 @@ export default function MealEditor({
                     className="quantity-input-part"
                     type="number"
                     step="0.1"
+                    placeholder={COMPONENT_QTY_PLACEHOLDER}
                     value={componentDraft.quantity}
                     onChange={(e) => updateComponentDraftField("quantity", e.target.value)}
                   />
@@ -574,19 +555,17 @@ export default function MealEditor({
                 </div>
               </label>
             </div>
-            {OPTIONAL_COMPONENT_FIELDS.filter(({ key }) => enabledComponentFields.includes(key)).map(
-              ({ key, inputLabel }) => (
-                <label key={key}>
-                  {inputLabel}
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={componentDraft[key]}
-                    onChange={(e) => updateComponentDraftField(key, e.target.value)}
-                  />
-                </label>
-              )
-            )}
+            {OPTIONAL_COMPONENT_FIELDS.map(({ key, inputLabel }) => (
+              <label key={key}>
+                {inputLabel}
+                <input
+                  type="number"
+                  step="0.1"
+                  value={componentDraft[key]}
+                  onChange={(e) => updateComponentDraftField(key, e.target.value)}
+                />
+              </label>
+            ))}
           </div>
 
           <div className="component-draft-actions">
@@ -663,7 +642,8 @@ export default function MealEditor({
                     className="quantity-input-part"
                     type="number"
                     step="any"
-                    min="0.01"
+                    min="0"
+                    placeholder={MEAL_QTY_PLACEHOLDER}
                     value={mealQuantity}
                     onChange={(e) => setMealQuantity(e.target.value)}
                     aria-label="Cantidad"
@@ -819,7 +799,8 @@ export default function MealEditor({
             <input
               type="number"
               step="any"
-              min="0.01"
+              min="0"
+              placeholder={MEAL_QTY_PLACEHOLDER}
               value={mealQuantity}
               onChange={(e) => setMealQuantity(e.target.value)}
             />

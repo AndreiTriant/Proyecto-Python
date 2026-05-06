@@ -49,7 +49,7 @@ export default function SortableDayMealCard({
 
   const nutritionTooltip = useMemo(() => {
     if (!tmpl) return null;
-    const qtyLine = `${formatNumber(tmpl.quantity ?? 1)} ${tmpl.unit || "porción"}`;
+    const qtyLine = `${formatNumber(tmpl.quantity ?? 1)} ${tmpl.unit || "g"}`;
     const calLine = isNonZero(tmpl.calories) ? `${formatNumber(tmpl.calories)} kcal` : null;
     const macroParts = [];
     if (isNonZero(tmpl.protein)) macroParts.push(`Proteínas ${formatNumber(tmpl.protein)} g`);

@@ -132,27 +132,6 @@
   margin: 0;
 }
 
-.component-field-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-bottom: 1rem;
-}
-
-.component-field-toggle {
-  border: 1px solid rgba(79, 70, 229, 0.2);
-  background: #fff;
-  color: var(--primary);
-  border-radius: 999px;
-  padding: 0.45rem 0.8rem;
-  font-weight: 600;
-}
-
-.component-field-toggle-active {
-  background: rgba(79, 70, 229, 0.1);
-  border-color: rgba(79, 70, 229, 0.36);
-}
-
 .component-draft-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -161,20 +140,42 @@
 
 .component-draft-name-qty-row {
   grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
   gap: 0.75rem;
-  align-items: start;
 }
 
-.component-draft-name-field {
+/*
+ * .modal-content label y .editor-page label fuerzan display:block (mayor especificidad que una sola clase)
+ * y rompen el apilado etiqueta + control. Hay que ganar con meal-editor + label + clase.
+ */
+.meal-editor .component-draft-name-qty-row > label.component-draft-name-field,
+.meal-editor .component-draft-name-qty-row > label.component-draft-qty-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
   min-width: 0;
+  margin-top: 0;
 }
 
-@media (max-width: 520px) {
-  .component-draft-name-qty-row {
-    grid-template-columns: 1fr;
-  }
+.meal-editor .component-draft-name-qty-row > label.component-draft-name-field {
+  flex: 1 1 auto;
+}
+
+.meal-editor .component-draft-name-qty-row > label.component-draft-qty-field {
+  flex: 0 0 auto;
+}
+
+.meal-editor .component-draft-name-qty-row label input,
+.meal-editor .component-draft-name-qty-row label select {
+  margin-top: 0;
+}
+
+.component-draft-name-qty-row .quantity-field-row {
+  margin-top: 0;
 }
 
 .quantity-field-row {

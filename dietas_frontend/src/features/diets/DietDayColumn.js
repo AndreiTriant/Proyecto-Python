@@ -78,7 +78,7 @@ export default function DietDayColumn({
                 >
                   <span>{meal.name}</span>
                   <small>
-                    {Number(meal.quantity ?? 1).toFixed(1)} {meal.unit || "porción"} ·{" "}
+                    {Number(meal.quantity ?? 1).toFixed(1)} {meal.unit || "g"} ·{" "}
                     {Number(meal.calories || 0).toFixed(1)} kcal · {meal.components?.length || 0} alimento
                     {(meal.components?.length || 0) === 1 ? "" : "s"}
                   </small>
